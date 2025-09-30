@@ -45,18 +45,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="flex justify-center items-center space-x-2">
             <ChefHat className="h-12 w-12 text-primary" />
-            <span className="text-3xl font-bold text-gray-900">FoodApp</span>
+            <span className="text-3xl font-bold text-foreground">FoodApp</span>
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-foreground">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Or{' '}
             <Link
               to="/register"

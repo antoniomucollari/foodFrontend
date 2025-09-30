@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
+import ThemeToggle from './ThemeToggle';
 import { 
   ShoppingCart, 
   User, 
@@ -40,16 +41,16 @@ const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-2">
                 <ChefHat className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold text-gray-900">FoodApp</span>
+                <span className="text-xl font-bold text-foreground">FoodApp</span>
               </Link>
             </div>
 
@@ -65,7 +66,7 @@ const Layout = () => {
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground'
-                        : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                        : 'text-foreground hover:text-primary hover:bg-accent'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -77,9 +78,10 @@ const Layout = () => {
 
             {/* User Menu */}
             <div className="hidden md:flex items-center space-x-4">
+              <ThemeToggle />
               {isAuthenticated() ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-muted-foreground">
                     Welcome, {user?.email}
                   </span>
                   <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -119,7 +121,7 @@ const Layout = () => {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-card border-t border-border">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
@@ -131,7 +133,7 @@ const Layout = () => {
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground'
-                        : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                        : 'text-foreground hover:text-primary hover:bg-accent'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -141,8 +143,8 @@ const Layout = () => {
               })}
               
               {isAuthenticated() ? (
-                <div className="pt-4 border-t">
-                  <div className="px-3 py-2 text-sm text-gray-700">
+                <div className="pt-4 border-t border-border">
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
                     Welcome, {user?.email}
                   </div>
                   <Button
@@ -155,7 +157,10 @@ const Layout = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="pt-4 border-t space-y-2">
+                <div className="pt-4 border-t border-border space-y-2">
+                  <div className="flex justify-center mb-2">
+                    <ThemeToggle />
+                  </div>
                   <Button variant="outline" className="w-full" asChild>
                     <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
                       Login

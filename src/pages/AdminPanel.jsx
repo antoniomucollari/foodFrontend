@@ -170,14 +170,22 @@ const AdminPanel = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" asChild>
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Link>
+          </Button>
+          <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
+        </div>
+        <Button asChild>
+          <Link to="/new-orders">
+            <Package className="h-4 w-4 mr-2" />
+            Active Orders
           </Link>
         </Button>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
       </div>
 
       {/* Stats Cards */}

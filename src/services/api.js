@@ -104,6 +104,14 @@ export const orderAPI = {
   getOrderById: (id) => api.get(`/orders/get-by-id/${id}`),
   getOrderItemById: (orderItemId) => api.get(`/orders/order-item/${orderItemId}`),
   getAllOrders: (params = {}) => api.get('/orders/all', { params }),
+  getNewOrders: (params = {}) => api.get('/orders/all', { 
+    params: {
+      ...params,
+      // Filter for orders that are not delivered and payment not completed
+      excludeDelivered: true,
+      excludeCompletedPayment: true
+    }
+  }),
   updateOrderStatus: (orderData) => api.put('/orders/update-status', orderData),
   countUniqueCustomers: () => api.get('/orders/unique-customers'),
 };

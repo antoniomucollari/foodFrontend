@@ -65,10 +65,10 @@ const Register = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <ChefHat className="h-8 w-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Registration Successful!
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Your account has been created successfully. Redirecting to login...
             </p>
             <Button asChild>
@@ -81,18 +81,18 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="flex justify-center items-center space-x-2">
             <ChefHat className="h-12 w-12 text-primary" />
-            <span className="text-3xl font-bold text-gray-900">FoodApp</span>
+            <span className="text-3xl font-bold text-foreground">FoodApp</span>
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-foreground">
             Create your account
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Or{' '}
             <Link
               to="/login"
@@ -158,7 +158,7 @@ const Register = () => {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
