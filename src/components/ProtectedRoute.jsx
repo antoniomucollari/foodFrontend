@@ -1,9 +1,14 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({
+  children,
+  requireAdmin = false,
+  restrictAdmin = false,
+}) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -15,6 +20,11 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
+  }
+
+  // If user is admin and trying to access non-admin routes, redirect to admin dashboard
+  if (restrictAdmin && isAdmin() && !location.pathname.startsWith("/admin")) {
+    return <Navigate to="/admin" replace />;
   }
 
   if (requireAdmin && !isAdmin()) {

@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
-import ThemeToggle from './ThemeToggle';
-import { 
-  ShoppingCart, 
-  User, 
-  LogOut, 
-  Menu as MenuIcon, 
+import React, { useState } from "react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
+import ThemeToggle from "./ThemeToggle";
+import {
+  ShoppingCart,
+  User,
+  LogOut,
+  Menu as MenuIcon,
   X,
   Home,
   ChefHat,
-  Settings
-} from 'lucide-react';
+  Settings,
+} from "lucide-react";
 
 const Layout = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
@@ -20,20 +20,21 @@ const Layout = () => {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Menu', href: '/menu', icon: ChefHat },
+    { name: "Home", href: "/", icon: Home },
+    { name: "Menu", href: "/menu", icon: ChefHat },
   ];
 
   if (isAuthenticated()) {
     navigation.push(
-      { name: 'Cart', href: '/cart', icon: ShoppingCart },
-      { name: 'Orders', href: '/orders', icon: User }
+      { name: "Cart", href: "/cart", icon: ShoppingCart },
+      { name: "Orders", href: "/orders", icon: User }
     );
   }
 
-  if (isAdmin()) {
-    navigation.push({ name: 'Admin', href: '/admin', icon: Settings });
-  }
+  // Admin users will access dashboard directly via URL
+  // if (isAdmin()) {
+  //   navigation.push({ name: 'Admin', href: '/admin', icon: Settings });
+  // }
 
   const handleLogout = () => {
     logout();
@@ -50,7 +51,9 @@ const Layout = () => {
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-2">
                 <ChefHat className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold text-foreground">FoodApp</span>
+                <span className="text-xl font-bold text-foreground">
+                  FoodApp
+                </span>
               </Link>
             </div>
 
@@ -65,8 +68,8 @@ const Layout = () => {
                     to={item.href}
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:text-primary hover:bg-accent'
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:text-primary hover:bg-accent"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -132,8 +135,8 @@ const Layout = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:text-primary hover:bg-accent'
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:text-primary hover:bg-accent"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -141,7 +144,7 @@ const Layout = () => {
                   </Link>
                 );
               })}
-              
+
               {isAuthenticated() ? (
                 <div className="pt-4 border-t border-border">
                   <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -162,12 +165,18 @@ const Layout = () => {
                     <ThemeToggle />
                   </div>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
                       Login
                     </Link>
                   </Button>
                   <Button className="w-full" asChild>
-                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
                       Register
                     </Link>
                   </Button>

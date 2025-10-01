@@ -1,4 +1,5 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
+import { useEffect, useState } from "react";
 
 class WebSocketService {
   constructor() {
@@ -11,21 +12,21 @@ class WebSocketService {
       return this.socket;
     }
 
-    this.socket = io('http://localhost:8080', {
-      transports: ['websocket'],
+    this.socket = io("http://localhost:8080", {
+      transports: ["websocket"],
       autoConnect: true,
     });
 
-    this.socket.on('connect', () => {
-      console.log('WebSocket connected:', this.socket.id);
+    this.socket.on("connect", () => {
+      console.log("WebSocket connected:", this.socket.id);
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
+    this.socket.on("disconnect", () => {
+      console.log("WebSocket disconnected");
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+    this.socket.on("connect_error", (error) => {
+      console.error("WebSocket connection error:", error);
     });
 
     return this.socket;
@@ -44,7 +45,7 @@ class WebSocketService {
     }
 
     this.socket.on(event, callback);
-    
+
     // Store listener for cleanup
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
@@ -75,26 +76,26 @@ class WebSocketService {
 
   // Specific methods for order updates
   subscribeToNewOrders(callback) {
-    this.subscribe('newOrder', callback);
+    this.subscribe("newOrder", callback);
   }
 
   subscribeToOrderUpdates(callback) {
-    this.subscribe('orderUpdated', callback);
+    this.subscribe("orderUpdated", callback);
   }
 
   unsubscribeFromNewOrders(callback) {
-    this.unsubscribe('newOrder', callback);
+    this.unsubscribe("newOrder", callback);
   }
 
   unsubscribeFromOrderUpdates(callback) {
-    this.unsubscribe('orderUpdated', callback);
+    this.unsubscribe("orderUpdated", callback);
   }
 
   // Cleanup all listeners
   cleanup() {
     if (this.socket) {
       this.listeners.forEach((callbacks, event) => {
-        callbacks.forEach(callback => {
+        callbacks.forEach((callback) => {
           this.socket.off(event, callback);
         });
       });
@@ -105,5 +106,43 @@ class WebSocketService {
 
 // Create singleton instance
 const webSocketService = new WebSocketService();
+
+// React hook for using WebSocket
+export const useWebSocket = () => {
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    const wsSocket = webSocketService.connect();
+    setSocket(wsSocket);
+
+    const handleConnect = () => {
+      setIsConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      setIsConnected(false);
+    };
+
+    wsSocket.on("connect", handleConnect);
+    wsSocket.on("disconnect", handleDisconnect);
+
+    // Set initial connection state
+    setIsConnected(wsSocket.connected);
+
+    return () => {
+      wsSocket.off("connect", handleConnect);
+      wsSocket.off("disconnect", handleDisconnect);
+    };
+  }, []);
+
+  return {
+    socket,
+    isConnected,
+    subscribe: webSocketService.subscribe.bind(webSocketService),
+    unsubscribe: webSocketService.unsubscribe.bind(webSocketService),
+    emit: webSocketService.emit.bind(webSocketService),
+  };
+};
 
 export default webSocketService;
