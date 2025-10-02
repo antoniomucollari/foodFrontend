@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -18,8 +19,8 @@ const loginSchema = z.object({
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const { login } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -32,13 +33,14 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    setError('');
     
     try {
       await login(data);
+      showSuccess('Login successful! Welcome back.');
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      // Error is handled by global error handler
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -76,11 +78,6 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                  {error}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

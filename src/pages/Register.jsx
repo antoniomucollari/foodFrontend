@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -21,9 +22,8 @@ const registerSchema = z.object({
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const { register: registerUser } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -36,7 +36,6 @@ const Register = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    setError('');
     
     try {
       // Add default role for new users
@@ -46,39 +45,18 @@ const Register = () => {
       };
       
       await registerUser(userData);
-      setSuccess(true);
+      showSuccess('Registration successful! Please log in to continue.');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      // Error is handled by global error handler
+      console.error('Registration error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ChefHat className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              Registration Successful!
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              Your account has been created successfully. Redirecting to login...
-            </p>
-            <Button asChild>
-              <Link to="/login">Go to Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
@@ -112,11 +90,6 @@ const Register = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                  {error}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>

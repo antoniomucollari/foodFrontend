@@ -1,4 +1,5 @@
 import axios from "axios";
+import { handleApiError } from "./errorHandler";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -17,6 +18,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log("Making API request:", config.method?.toUpperCase(), config.url, config.params);
     return config;
   },
   (error) => {
@@ -24,15 +26,26 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token expiration
+// Response interceptor to handle token expiration and global error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("API response:", response.config.url, response.status, response.data);
+    return response;
+  },
   (error) => {
+    console.error("API error:", error.config?.url, error.response?.status, error.response?.data);
+    
+    // Handle 401 errors (token expiration)
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
+      return Promise.reject(error);
     }
+    
+    // Handle all other errors with global error handler
+    handleApiError(error);
+    
     return Promise.reject(error);
   }
 );
@@ -114,14 +127,17 @@ export const orderAPI = {
         excludeCompletedPayment: true,
       },
     }),
+  getIncompleteOrders: (params = {}) => api.get("/orders/incomplete-orders", { params }),
   updateOrderStatus: (orderData) => api.put("/orders/update-status", orderData),
   countUniqueCustomers: () => api.get("/orders/unique-customers"),
 
   // Dashboard statistics
   getTotalOrders: () => api.get("/orders/stats/total-orders"),
   getTotalRevenue: () => api.get("/orders/stats/total-revenue"),
-  getMonthlyRevenue: (year) =>
-    api.get("/orders/stats/monthly-revenue", { params: { year } }),
+  getMonthlyRevenue: (year) => {
+    console.log("API call - getMonthlyRevenue with year:", year);
+    return api.get("/orders/stats/monthly-revenue", { params: { year } });
+  },
   getDailyRevenueForMonth: (year, month) =>
     api.get("/orders/stats/daily-revenue-for-month", {
       params: { year, month },

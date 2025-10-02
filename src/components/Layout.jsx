@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
+import { useCartAnimation } from "../hooks/useCartAnimation";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -12,10 +14,13 @@ import {
   Home,
   ChefHat,
   Settings,
+  UserCircle,
 } from "lucide-react";
 
 const Layout = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { cartItemCount } = useCart();
+  const isCartAnimating = useCartAnimation(cartItemCount);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -26,7 +31,6 @@ const Layout = () => {
 
   if (isAuthenticated()) {
     navigation.push(
-      { name: "Cart", href: "/cart", icon: ShoppingCart },
       { name: "Orders", href: "/orders", icon: User }
     );
   }
@@ -44,7 +48,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-card shadow-sm border-b border-border">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -85,8 +89,28 @@ const Layout = () => {
               {isAuthenticated() ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-muted-foreground">
-                    Welcome, {user?.email}
+                    Welcome, {user?.name || user?.email}
                   </span>
+                  {/* Profile Icon */}
+                  <Link
+                    to="/profile"
+                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors text-foreground hover:text-primary hover:bg-accent"
+                    title="Profile"
+                  >
+                    <UserCircle className="h-4 w-4" />
+                  </Link>
+                  {/* Cart Icon with Count */}
+                  <Link
+                    to="/cart"
+                    className="relative flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent hover:scale-105"
+                  >
+                    <ShoppingCart className={`h-4 w-4 transition-transform duration-200 ${isCartAnimating ? 'animate-bounce' : ''}`} />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Link>
                   <Button variant="outline" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -148,8 +172,31 @@ const Layout = () => {
               {isAuthenticated() ? (
                 <div className="pt-4 border-t border-border">
                   <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Welcome, {user?.email}
+                    Welcome, {user?.name || user?.email}
                   </div>
+                  {/* Profile Link */}
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors text-foreground hover:text-primary hover:bg-accent"
+                  >
+                    <UserCircle className="h-5 w-5" />
+                    <span>Profile</span>
+                  </Link>
+                  {/* Cart Link with Count */}
+                  <Link
+                    to="/cart"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent relative hover:scale-105"
+                  >
+                    <ShoppingCart className={`h-5 w-5 transition-transform duration-200 ${isCartAnimating ? 'animate-bounce' : ''}`} />
+                    <span>Cart</span>
+                    {cartItemCount > 0 && (
+                      <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Link>
                   <Button
                     variant="outline"
                     className="w-full justify-start mt-2"

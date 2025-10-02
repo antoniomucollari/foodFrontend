@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useLocation, Outlet, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import ThemeToggle from "../components/ThemeToggle";
 import {
@@ -14,64 +15,22 @@ import {
   X,
 } from "lucide-react";
 
-// Import dashboard components
-import DashboardHome from "../components/admin/DashboardHome";
-import LiveOrders from "../components/admin/LiveOrders";
-import AllOrders from "../components/admin/AllOrders";
-import CategoriesManagement from "../components/admin/CategoriesManagement";
-import MenuItemsManagement from "../components/admin/MenuItemsManagement";
-import GraphsSection from "../components/admin/GraphsSection";
-
 const AdminDashboard = () => {
   const { logout } = useAuth();
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [
-    { id: "dashboard", name: "Dashboard", icon: Home },
-    { id: "live-orders", name: "Live Orders", icon: RotateCcw },
-    { id: "all-orders", name: "All Orders", icon: Package },
-    { id: "categories", name: "Categories", icon: Package },
-    { id: "menu-items", name: "Menu Items", icon: ChefHat },
-    { id: "graphs", name: "More Graphs", icon: BarChart3 },
+    { id: "dashboard", name: "Dashboard", icon: Home, path: "/admin/dashboard" },
+    { id: "live-orders", name: "Live Orders", icon: RotateCcw, path: "/admin/live-orders" },
+    { id: "all-orders", name: "All Orders", icon: Package, path: "/admin/all-orders" },
+    { id: "categories", name: "Categories", icon: Package, path: "/admin/categories" },
+    { id: "menu-items", name: "Menu Items", icon: ChefHat, path: "/admin/menuItems" },
+    { id: "graphs", name: "More Graphs", icon: BarChart3, path: "/admin/graphs" },
   ];
 
   const handleLogout = () => {
     logout();
-  };
-
-  const renderContent = () => {
-    try {
-      switch (activeSection) {
-        case "dashboard":
-          return <DashboardHome setActiveSection={setActiveSection} />;
-        case "live-orders":
-          return <LiveOrders />;
-        case "all-orders":
-          return <AllOrders />;
-        case "categories":
-          return <CategoriesManagement />;
-        case "menu-items":
-          return <MenuItemsManagement />;
-        case "graphs":
-          return <GraphsSection />;
-        default:
-          return <DashboardHome setActiveSection={setActiveSection} />;
-      }
-    } catch (error) {
-      console.error("Error rendering content:", error);
-      return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error Loading Dashboard
-          </h1>
-          <p className="text-red-500">
-            There was an error loading the dashboard content.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">Error: {error.message}</p>
-        </div>
-      );
-    }
   };
 
   return (
@@ -97,27 +56,25 @@ const AdminDashboard = () => {
         <div
           className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:static lg:inset-0`}
+          } lg:static lg:inset-0 lg:fixed`}
         >
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-screen overflow-hidden">
             {/* Logo */}
-            <div className="flex items-center justify-center h-16 border-b border-border">
+            <div className="flex items-center justify-center h-16 border-b border-border flex-shrink-0">
               <ChefHat className="h-8 w-8 text-primary" />
               <span className="ml-2 text-xl font-bold">FoodApp Admin</span>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-2">
+            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeSection === item.id;
+                const isActive = location.pathname === item.path;
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       isActive
                         ? "bg-primary text-primary-foreground"
@@ -126,13 +83,13 @@ const AdminDashboard = () => {
                   >
                     <Icon className="mr-3 h-5 w-5" />
                     {item.name}
-                  </button>
+                  </Link>
                 );
               })}
             </nav>
 
-            {/* User section */}
-            <div className="p-4 border-t border-border">
+            {/* User section - Fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <ThemeToggle />
                 <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -152,8 +109,10 @@ const AdminDashboard = () => {
           />
         )}
 
-        {/* Main content - Full width */}
-        <div className="flex-1 w-full">{renderContent()}</div>
+        {/* Main content - Account for fixed sidebar */}
+        <div className="flex-1 w-full lg:ml-64">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

@@ -19,11 +19,13 @@ import {
   Package
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 const MenuItemDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [newReview, setNewReview] = useState({
@@ -72,6 +74,11 @@ const MenuItemDetail = () => {
     mutationFn: (cartData) => cartAPI.addToCart(cartData),
     onSuccess: () => {
       queryClient.invalidateQueries(['cart']);
+      showSuccess('Item added to cart successfully!');
+    },
+    onError: (error) => {
+      // Error is handled by global error handler
+      console.error('Add to cart error:', error);
     },
   });
 
@@ -79,6 +86,11 @@ const MenuItemDetail = () => {
     mutationFn: (menuId) => cartAPI.incrementItem(menuId),
     onSuccess: () => {
       queryClient.invalidateQueries(['cart']);
+      showSuccess('Quantity updated!');
+    },
+    onError: (error) => {
+      // Error is handled by global error handler
+      console.error('Increment error:', error);
     },
   });
 
@@ -86,6 +98,11 @@ const MenuItemDetail = () => {
     mutationFn: (menuId) => cartAPI.decrementItem(menuId),
     onSuccess: () => {
       queryClient.invalidateQueries(['cart']);
+      showSuccess('Quantity updated!');
+    },
+    onError: (error) => {
+      // Error is handled by global error handler
+      console.error('Decrement error:', error);
     },
   });
 
@@ -236,26 +253,28 @@ const MenuItemDetail = () => {
                 {/* Add to Cart Section */}
                 {isAuthenticated() ? (
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <Label htmlFor="quantity">Quantity:</Label>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 text-center">{quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setQuantity(quantity + 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                    {cartQuantity === 0 && (
+                      <div className="flex items-center space-x-4">
+                        <Label htmlFor="quantity">Quantity:</Label>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-12 text-center">{quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setQuantity(quantity + 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {cartQuantity > 0 ? (
                       <div className="flex items-center space-x-4">
@@ -265,17 +284,19 @@ const MenuItemDetail = () => {
                             variant="outline"
                             onClick={handleDecrement}
                             disabled={decrementMutation.isPending}
+                            className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Minus className="h-4 w-4" />
+                            <Minus className={`h-4 w-4 transition-transform duration-200 ${decrementMutation.isPending ? 'animate-pulse' : ''}`} />
                           </Button>
-                          <span className="w-12 text-center">{cartQuantity}</span>
+                          <span className="w-12 text-center font-medium">{cartQuantity}</span>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={handleIncrement}
                             disabled={incrementMutation.isPending}
+                            className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Plus className={`h-4 w-4 transition-transform duration-200 ${incrementMutation.isPending ? 'animate-pulse' : ''}`} />
                           </Button>
                         </div>
                         <span className="text-sm text-gray-600">in cart</span>
@@ -284,9 +305,9 @@ const MenuItemDetail = () => {
                       <Button
                         onClick={handleAddToCart}
                         disabled={addToCartMutation.isPending}
-                        className="w-full"
+                        className="w-full transition-all duration-200 hover:scale-105 active:scale-95"
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        <ShoppingCart className={`h-4 w-4 mr-2 transition-transform duration-200 ${addToCartMutation.isPending ? 'animate-spin' : ''}`} />
                         {addToCartMutation.isPending ? 'Adding...' : 'Add to Cart'}
                       </Button>
                     )}

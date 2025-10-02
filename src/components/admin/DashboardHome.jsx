@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { orderAPI } from "../../services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -19,7 +20,8 @@ import {
 import OrderStatusChart from "./OrderStatusChart";
 import OrderDetailModal from "./OrderDetailModal";
 
-const DashboardHome = ({ setActiveSection }) => {
+const DashboardHome = () => {
+  const navigate = useNavigate();
   const [orderFilters, setOrderFilters] = useState({
     orderStatus: "",
     paymentStatus: "",
@@ -29,7 +31,7 @@ const DashboardHome = ({ setActiveSection }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch dashboard statistics
-  const { data: totalRevenueData } = useQuery({
+  const { data: totalRevenueResponse } = useQuery({
     queryKey: ["dashboard-total-revenue"],
     queryFn: () => orderAPI.getTotalRevenue(),
   });
@@ -59,11 +61,34 @@ const DashboardHome = ({ setActiveSection }) => {
     queryFn: () => orderAPI.getMostPopularItems(3),
   });
 
-  const totalRevenue = totalRevenueData?.data?.data || 0;
+  const totalRevenueData = totalRevenueResponse?.data?.data || {};
+  const totalRevenue = totalRevenueData?.totalRevenue || 0;
+  const currentMonthDifference = totalRevenueData?.currentMonth || 0;
+  const previousMonthRevenue = totalRevenueData?.previousMonth || 0;
+  const percentageChange = totalRevenueData?.percentageChange || 0;
   const totalOrders = totalOrdersData?.data?.data || 0;
   const uniqueCustomers = uniqueCustomersData?.data?.data || 0;
   const orders = ordersData?.data?.data?.content || [];
   const mostPopularItems = mostPopularData?.data?.data || [];
+
+  // Helper functions
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatPercentage = (percentage) => {
+    const sign = percentage >= 0 ? '+' : '';
+    return `${sign}${percentage.toFixed(1)}%`;
+  };
+
+  const getPercentageColor = (percentage) => {
+    return percentage >= 0 ? 'text-green-500' : 'text-red-500';
+  };
 
   const getOrderStatusColor = (status) => {
     switch (status) {
@@ -138,10 +163,16 @@ const DashboardHome = ({ setActiveSection }) => {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Revenue
                 </p>
-                <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
                 <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-500">+32.40%</span>
+                  {percentageChange >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                  )}
+                  <span className={`text-sm ${getPercentageColor(percentageChange)}`}>
+                    {formatPercentage(percentageChange)} from last month
+                  </span>
                 </div>
               </div>
               <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -209,7 +240,7 @@ const DashboardHome = ({ setActiveSection }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setActiveSection("all-orders")}
+                  onClick={() => navigate("/admin/all-orders")}
                 >
                   View All
                 </Button>
@@ -256,7 +287,7 @@ const DashboardHome = ({ setActiveSection }) => {
                         <td className="py-3 px-4">
                           <div>
                             <p className="font-medium">
-                              {order.user?.email || "N/A"}
+                              {order.user?.name || order.user?.email || "N/A"}
                             </p>
                           </div>
                         </td>

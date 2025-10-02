@@ -2,8 +2,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { X, User, Calendar, DollarSign, Package, MapPin } from "lucide-react";
+import { User, Calendar, DollarSign, Package, MapPin } from "lucide-react";
 
 const OrderDetailModal = ({ order, isOpen, onClose }) => {
   if (!order) return null;
@@ -59,18 +58,16 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
   };
 
   const calculateItemTotal = (item) => {
-    return item.quantity * item.menuItem?.price || 0;
+    const price = item.menu?.price || item.menuItem?.price || item.pricePerUnit || 0;
+    return item.quantity * price;
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Order Details - #{order.id}</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle>
+            Order Details - #{order.id}
           </DialogTitle>
         </DialogHeader>
 
@@ -167,31 +164,80 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
               <CardTitle className="text-sm font-medium">Order Items</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {order.orderItems?.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 border border-border rounded-lg"
+                    className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                   >
-                    <div className="flex-1">
-                      <h4 className="font-medium">
-                        {item.menuItem?.name || `Item ${index + 1}`}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Quantity: {item.quantity}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Price per item: $
-                        {item.menuItem?.price?.toFixed(2) || "0.00"}
-                      </p>
+                    {/* Menu Item Image */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={item.menu?.imageUrl || item.menuItem?.imageUrl || '/placeholder-food.jpg'}
+                        alt={item.menu?.name || item.menuItem?.name || `Item ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border border-border"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-food.jpg';
+                        }}
+                      />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
+                    
+                    {/* Menu Item Details */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-lg mb-1">
+                        {item.menu?.name || item.menuItem?.name || `Item ${index + 1}`}
+                      </h4>
+                      {item.menu?.description || item.menuItem?.description ? (
+                        <p className="text-sm text-muted-foreground mb-2 overflow-hidden" style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {item.menu?.description || item.menuItem?.description}
+                        </p>
+                      ) : null}
+                      
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <span className="flex items-center">
+                          <span className="font-medium">Qty:</span>
+                          <span className="ml-1 font-semibold text-foreground">{item.quantity}</span>
+                        </span>
+                        <span className="flex items-center">
+                          <span className="font-medium">Price:</span>
+                          <span className="ml-1 font-semibold text-foreground">
+                            ${(item.menu?.price || item.menuItem?.price || item.pricePerUnit || 0).toFixed(2)}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Total Price */}
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-lg font-bold text-primary">
                         ${calculateItemTotal(item).toFixed(2)}
                       </p>
+                      <p className="text-xs text-muted-foreground">Total</p>
                     </div>
                   </div>
                 ))}
+                
+                {/* Order Summary */}
+                {order.orderItems && order.orderItems.length > 0 && (
+                  <div className="border-t border-border pt-4 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold">Order Total:</span>
+                      <span className="text-xl font-bold text-primary">
+                        ${order.totalAmount?.toFixed(2) || "0.00"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
+                      <span>{order.orderItems.length} item{order.orderItems.length !== 1 ? 's' : ''}</span>
+                      <span>
+                        {order.orderItems.reduce((total, item) => total + item.quantity, 0)} total quantity
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -3,13 +3,44 @@ import { useQuery } from "@tanstack/react-query";
 import { orderAPI } from "../../services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { BarChart3, TrendingUp, Calendar } from "lucide-react";
+import { BarChart3, TrendingUp, Calendar, TrendingDown } from "lucide-react";
 import MonthlyRevenueChart from "./MonthlyRevenueChart";
 import DailyRevenueChart from "./DailyRevenueChart";
 
 const GraphsSection = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+
+  // Fetch total revenue data
+  const { data: totalRevenueResponse } = useQuery({
+    queryKey: ["dashboard-total-revenue"],
+    queryFn: () => orderAPI.getTotalRevenue(),
+  });
+
+  const totalRevenueData = totalRevenueResponse?.data?.data || {};
+  const totalRevenue = totalRevenueData?.totalRevenue || 0;
+  const currentMonthDifference = totalRevenueData?.currentMonth || 0;
+  const previousMonthRevenue = totalRevenueData?.previousMonth || 0;
+  const percentageChange = totalRevenueData?.percentageChange || 0;
+
+  // Helper functions
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatPercentage = (percentage) => {
+    const sign = percentage >= 0 ? '+' : '';
+    return `${sign}${percentage.toFixed(1)}%`;
+  };
+
+  const getPercentageColor = (percentage) => {
+    return percentage >= 0 ? 'text-green-500' : 'text-red-500';
+  };
 
   // Generate year options (current year and previous 5 years)
   const yearOptions = Array.from(
@@ -47,101 +78,92 @@ const GraphsSection = () => {
         </div>
       </div>
 
-      {/* Monthly Revenue Chart */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2" />
-              Monthly Revenue Analysis
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <MonthlyRevenueChart year={selectedYear} />
-        </CardContent>
-      </Card>
+      {/* Charts Container - Centered with max width */}
+      <div className="flex flex-col items-center space-y-6">
+        {/* Monthly Revenue Chart */}
+        <div className="w-full max-w-4xl">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Monthly Revenue Analysis
+                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <MonthlyRevenueChart year={selectedYear} />
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Daily Revenue Chart */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              Daily Revenue Analysis
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                {monthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <DailyRevenueChart year={selectedYear} month={selectedMonth} />
-        </CardContent>
-      </Card>
+        {/* Daily Revenue Chart */}
+        <div className="w-full max-w-4xl">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Daily Revenue Analysis
+                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  >
+                    {monthOptions.map((month) => (
+                      <option key={month.value} value={month.value}>
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DailyRevenueChart year={selectedYear} month={selectedMonth} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Additional Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex justify-center">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  This Month
+                  Previous Month
                 </p>
-                <p className="text-2xl font-bold">$12,345</p>
-                <p className="text-sm text-green-500">+15.3% from last month</p>
-              </div>
-              <div className="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Average Order
-                </p>
-                <p className="text-2xl font-bold">$45.67</p>
-                <p className="text-sm text-blue-500">+8.2% from last month</p>
+                <p className="text-2xl font-bold">{formatCurrency(previousMonthRevenue)}</p>
+                <p className="text-sm text-muted-foreground">Last month's revenue</p>
               </div>
               <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                 <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -155,10 +177,9 @@ const GraphsSection = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Peak Day
+                  Current Month
                 </p>
-                <p className="text-2xl font-bold">Saturday</p>
-                <p className="text-sm text-purple-500">$2,456 avg revenue</p>
+                <p className="text-2xl font-bold">{formatCurrency(currentMonthDifference)}</p>
               </div>
               <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
                 <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -166,6 +187,7 @@ const GraphsSection = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

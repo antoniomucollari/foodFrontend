@@ -6,7 +6,7 @@ const WebSocketStatus = () => {
   const [lastMessage, setLastMessage] = useState(null);
 
   useEffect(() => {
-    const socket = webSocketService.connect();
+    const client = webSocketService.connect();
     
     const handleConnect = () => {
       setIsConnected(true);
@@ -24,14 +24,15 @@ const WebSocketStatus = () => {
       setLastMessage({ type: 'Order Update', data, timestamp: new Date() });
     };
 
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
+    // Subscribe to connection events
+    webSocketService.subscribe('connect', handleConnect);
+    webSocketService.subscribe('disconnect', handleDisconnect);
     webSocketService.subscribeToNewOrders(handleNewOrder);
     webSocketService.subscribeToOrderUpdates(handleOrderUpdate);
 
     return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
+      webSocketService.unsubscribe('connect', handleConnect);
+      webSocketService.unsubscribe('disconnect', handleDisconnect);
       webSocketService.unsubscribeFromNewOrders(handleNewOrder);
       webSocketService.unsubscribeFromOrderUpdates(handleOrderUpdate);
     };
@@ -60,3 +61,4 @@ const WebSocketStatus = () => {
 };
 
 export default WebSocketStatus;
+

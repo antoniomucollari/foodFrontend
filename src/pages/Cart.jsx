@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { cartAPI, orderAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -12,13 +13,17 @@ import {
   Trash2, 
   CreditCard,
   ArrowLeft,
-  CheckCircle
+  CheckCircle,
+  Truck,
+  Wallet
 } from 'lucide-react';
 import { useState } from 'react';
 
 const Cart = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('delivery'); // 'delivery' or 'card'
   const queryClient = useQueryClient();
+  const { showSuccess, showError, showConfirm } = useToast();
 
   // Fetch cart data
   const { data: cartData, isLoading, error } = useQuery({
@@ -61,10 +66,11 @@ const Cart = () => {
       queryClient.invalidateQueries(['cart']);
       queryClient.invalidateQueries(['orders']);
       setIsCheckingOut(false);
-      alert('Order placed successfully!');
+      showSuccess('Order placed successfully!');
     },
     onError: (error) => {
-      alert('Checkout failed: ' + (error.response?.data?.message || 'Unknown error'));
+      // Error is handled by global error handler
+      console.error('Checkout error:', error);
       setIsCheckingOut(false);
     },
   });
@@ -77,21 +83,48 @@ const Cart = () => {
     decrementMutation.mutate(menuId);
   };
 
-  const handleRemoveItem = (cartItemId) => {
-    if (window.confirm('Are you sure you want to remove this item?')) {
+  const handleRemoveItem = async (cartItemId) => {
+    const confirmed = await showConfirm(
+      'Remove Item',
+      'Are you sure you want to remove this item from your cart?',
+      {
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        type: 'warning'
+      }
+    );
+    
+    if (confirmed) {
       removeItemMutation.mutate(cartItemId);
     }
   };
 
-  const handleClearCart = () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
+  const handleClearCart = async () => {
+    const confirmed = await showConfirm(
+      'Clear Cart',
+      'Are you sure you want to clear your cart? This will remove all items.',
+      {
+        confirmText: 'Clear Cart',
+        cancelText: 'Cancel',
+        type: 'warning'
+      }
+    );
+    
+    if (confirmed) {
       clearCartMutation.mutate();
     }
   };
 
   const handleCheckout = () => {
-    setIsCheckingOut(true);
-    checkoutMutation.mutate();
+    if (paymentMethod === 'delivery') {
+      // Continue with normal checkout for pay on delivery
+      setIsCheckingOut(true);
+      checkoutMutation.mutate();
+    } else if (paymentMethod === 'card') {
+      // Disable checkout for card payment (to be implemented by user)
+      showError('Card payment integration will be implemented separately. Please select "Pay on Delivery" for now.');
+      return;
+    }
   };
 
   if (isLoading) {
@@ -253,6 +286,46 @@ const Cart = () => {
                   <span>${totalAmount.toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Payment Method Selection */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-900">Payment Method</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="delivery"
+                      checked={paymentMethod === 'delivery'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                    />
+                    <Truck className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Pay on Delivery</div>
+                      <div className="text-xs text-gray-500">Pay when your order arrives</div>
+                    </div>
+                    <CheckCircle className={`h-5 w-5 ${paymentMethod === 'delivery' ? 'text-green-500' : 'text-gray-300'}`} />
+                  </label>
+
+                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                    />
+                    <Wallet className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Pay with Card</div>
+                      <div className="text-xs text-gray-500">Credit/Debit card payment</div>
+                    </div>
+                    <CheckCircle className={`h-5 w-5 ${paymentMethod === 'card' ? 'text-green-500' : 'text-gray-300'}`} />
+                  </label>
+                </div>
+              </div>
               
               <Button
                 className="w-full"
@@ -267,14 +340,26 @@ const Cart = () => {
                   </>
                 ) : (
                   <>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Checkout
+                    {paymentMethod === 'delivery' ? (
+                      <>
+                        <Truck className="h-4 w-4 mr-2" />
+                        Checkout - Pay on Delivery
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Checkout - Pay with Card
+                      </>
+                    )}
                   </>
                 )}
               </Button>
 
               <p className="text-xs text-gray-500 text-center">
-                You will be redirected to complete your order
+                {paymentMethod === 'delivery' 
+                  ? 'You will be redirected to complete your order' 
+                  : 'Card payment integration coming soon - please select "Pay on Delivery" for now'
+                }
               </p>
             </CardContent>
           </Card>

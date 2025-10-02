@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoryAPI, menuAPI, reviewAPI } from '../services/api';
 import { Button } from '../components/ui/button';
@@ -7,13 +7,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Search, Star, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { cartAPI } from '../services/api';
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [cartItems, setCartItems] = useState({});
+  const searchInputRef = useRef(null);
   const { isAuthenticated } = useAuth();
+  const { showSuccess } = useToast();
+
+  // Debounce search term to prevent excessive API calls
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Handle search input change
+  const handleSearchChange = useCallback((e) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  // Focus search input when component mounts or when needed
+  React.useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
@@ -23,10 +48,10 @@ const Menu = () => {
 
   // Fetch menu items
   const { data: menuData, isLoading: menuLoading } = useQuery({
-    queryKey: ['menu', selectedCategory, searchTerm],
+    queryKey: ['menu', selectedCategory, debouncedSearchTerm],
     queryFn: () => menuAPI.getMenus({ 
       categoryId: selectedCategory, 
-      searchTerm: searchTerm || undefined 
+      searchTerm: debouncedSearchTerm || undefined 
     }),
   });
 
@@ -40,9 +65,10 @@ const Menu = () => {
   const categories = categoriesData?.data?.data || [];
   const menuItems = menuData?.data?.data || [];
 
-  const handleAddToCart = async (menuId) => {
+  const handleAddToCart = async (menuId, event) => {
+    event.stopPropagation(); // Prevent card click from firing
     if (!isAuthenticated()) {
-      alert('Please login to add items to cart');
+      showSuccess('Please login to add items to cart');
       return;
     }
 
@@ -52,12 +78,15 @@ const Menu = () => {
         quantity: 1
       });
       refetchCart();
+      showSuccess('Item added to cart successfully!');
     } catch (error) {
+      // Error is handled by global error handler
       console.error('Error adding to cart:', error);
     }
   };
 
-  const handleIncrement = async (menuId) => {
+  const handleIncrement = async (menuId, event) => {
+    event.stopPropagation(); // Prevent card click from firing
     try {
       await cartAPI.incrementItem(menuId);
       refetchCart();
@@ -66,7 +95,8 @@ const Menu = () => {
     }
   };
 
-  const handleDecrement = async (menuId) => {
+  const handleDecrement = async (menuId, event) => {
+    event.stopPropagation(); // Prevent card click from firing
     try {
       await cartAPI.decrementItem(menuId);
       refetchCart();
@@ -123,11 +153,18 @@ const Menu = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
+              ref={searchInputRef}
               placeholder="Search for dishes..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10"
+              autoFocus
             />
+            {searchTerm !== debouncedSearchTerm && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -200,25 +237,28 @@ const Menu = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDecrement(item.id)}
+                            onClick={(e) => handleDecrement(item.id, e)}
+                            className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Minus className="h-4 w-4" />
+                            <Minus className="h-4 w-4 transition-transform duration-200" />
                           </Button>
                           <span className="text-sm font-medium">{cartQuantity}</span>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleIncrement(item.id)}
+                            onClick={(e) => handleIncrement(item.id, e)}
+                            className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-4 w-4 transition-transform duration-200" />
                           </Button>
                         </div>
                       ) : (
                         <Button
                           size="sm"
-                          onClick={() => handleAddToCart(item.id)}
+                          onClick={(e) => handleAddToCart(item.id, e)}
+                          className="transition-all duration-200 hover:scale-105 active:scale-95"
                         >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          <ShoppingCart className="h-4 w-4 mr-2 transition-transform duration-200" />
                           Add to Cart
                         </Button>
                       )}
@@ -227,7 +267,10 @@ const Menu = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => alert('Please login to add items to cart')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert('Please login to add items to cart');
+                      }}
                     >
                       <ShoppingCart className="h-4 w-4 mr-2" />
                       Add to Cart

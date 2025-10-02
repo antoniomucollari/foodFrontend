@@ -1,66 +1,115 @@
-import { io } from "socket.io-client";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import { useEffect, useState } from "react";
+
+// Polyfill for global variable (required by STOMP.js in browser)
+if (typeof global === 'undefined') {
+  window.global = window;
+}
 
 class WebSocketService {
   constructor() {
-    this.socket = null;
+    this.client = null;
+    this.isConnected = false;
     this.listeners = new Map();
   }
 
   connect() {
-    if (this.socket?.connected) {
-      return this.socket;
+    if (this.client?.connected) {
+      return this.client;
     }
 
-    this.socket = io("http://localhost:8080", {
-      transports: ["websocket"],
-      autoConnect: true,
-    });
+    try {
+      // Create SockJS connection
+      const socket = new SockJS("http://localhost:8080/ws");
+      
+      // Create STOMP client
+      this.client = new Client({
+        webSocketFactory: () => socket,
+        debug: (str) => {
+          console.log("STOMP Debug:", str);
+        },
+        onConnect: () => {
+          console.log("WebSocket connected");
+          this.isConnected = true;
+          this.notifyListeners("connect", {});
+        },
+        onDisconnect: () => {
+          console.log("WebSocket disconnected");
+          this.isConnected = false;
+          this.notifyListeners("disconnect", {});
+        },
+        onStompError: (frame) => {
+          console.error("STOMP Error:", frame);
+          this.notifyListeners("error", frame);
+        },
+        onWebSocketError: (error) => {
+          console.error("WebSocket Error:", error);
+          this.notifyListeners("error", error);
+        },
+      });
 
-    this.socket.on("connect", () => {
-      console.log("WebSocket connected:", this.socket.id);
-    });
-
-    this.socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
-    });
-
-    this.socket.on("connect_error", (error) => {
-      console.error("WebSocket connection error:", error);
-    });
-
-    return this.socket;
+      this.client.activate();
+      return this.client;
+    } catch (error) {
+      console.error("Error creating WebSocket connection:", error);
+      this.notifyListeners("error", error);
+      return null;
+    }
   }
 
   disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+    if (this.client) {
+      this.client.deactivate();
+      this.client = null;
+      this.isConnected = false;
     }
   }
 
-  subscribe(event, callback) {
-    if (!this.socket) {
+  subscribe(destination, callback) {
+    if (!this.client) {
       this.connect();
     }
 
-    this.socket.on(event, callback);
+    // Wait for connection before subscribing
+    if (!this.isConnected) {
+      const originalOnConnect = this.client.onConnect;
+      this.client.onConnect = (frame) => {
+        originalOnConnect(frame);
+        this.subscribeToDestination(destination, callback);
+      };
+    } else {
+      this.subscribeToDestination(destination, callback);
+    }
 
     // Store listener for cleanup
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
+    if (!this.listeners.has(destination)) {
+      this.listeners.set(destination, []);
     }
-    this.listeners.get(event).push(callback);
+    this.listeners.get(destination).push(callback);
   }
 
-  unsubscribe(event, callback) {
-    if (this.socket) {
-      this.socket.off(event, callback);
+  subscribeToDestination(destination, callback) {
+    this.client.subscribe(destination, (message) => {
+      try {
+        const data = JSON.parse(message.body);
+        callback(data);
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+        callback(message.body);
+      }
+    });
+  }
+
+  unsubscribe(destination, callback) {
+    if (this.client && this.isConnected) {
+      // Note: STOMP doesn't provide easy unsubscribe by callback
+      // We'll handle this in the cleanup method
     }
 
     // Remove from listeners map
-    if (this.listeners.has(event)) {
-      const eventListeners = this.listeners.get(event);
+    if (this.listeners.has(destination)) {
+      const eventListeners = this.listeners.get(destination);
       const index = eventListeners.indexOf(callback);
       if (index > -1) {
         eventListeners.splice(index, 1);
@@ -68,37 +117,45 @@ class WebSocketService {
     }
   }
 
-  emit(event, data) {
-    if (this.socket) {
-      this.socket.emit(event, data);
+  emit(destination, data) {
+    if (this.client && this.isConnected) {
+      this.client.publish({
+        destination: destination,
+        body: JSON.stringify(data),
+      });
     }
   }
 
   // Specific methods for order updates
   subscribeToNewOrders(callback) {
-    this.subscribe("newOrder", callback);
+    this.subscribe("/topic/incompleteOrders", callback);
   }
 
   subscribeToOrderUpdates(callback) {
-    this.subscribe("orderUpdated", callback);
+    this.subscribe("/topic/orderUpdates", callback);
   }
 
   unsubscribeFromNewOrders(callback) {
-    this.unsubscribe("newOrder", callback);
+    this.unsubscribe("/topic/incompleteOrders", callback);
   }
 
   unsubscribeFromOrderUpdates(callback) {
-    this.unsubscribe("orderUpdated", callback);
+    this.unsubscribe("/topic/orderUpdates", callback);
+  }
+
+  // Notify listeners of connection events
+  notifyListeners(event, data) {
+    if (this.listeners.has(event)) {
+      this.listeners.get(event).forEach(callback => callback(data));
+    }
   }
 
   // Cleanup all listeners
   cleanup() {
-    if (this.socket) {
-      this.listeners.forEach((callbacks, event) => {
-        callbacks.forEach((callback) => {
-          this.socket.off(event, callback);
-        });
-      });
+    if (this.client) {
+      this.client.deactivate();
+      this.client = null;
+      this.isConnected = false;
       this.listeners.clear();
     }
   }
@@ -109,12 +166,12 @@ const webSocketService = new WebSocketService();
 
 // React hook for using WebSocket
 export const useWebSocket = () => {
-  const [socket, setSocket] = useState(null);
+  const [client, setClient] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const wsSocket = webSocketService.connect();
-    setSocket(wsSocket);
+    const wsClient = webSocketService.connect();
+    setClient(wsClient);
 
     const handleConnect = () => {
       setIsConnected(true);
@@ -124,20 +181,27 @@ export const useWebSocket = () => {
       setIsConnected(false);
     };
 
-    wsSocket.on("connect", handleConnect);
-    wsSocket.on("disconnect", handleDisconnect);
+    const handleError = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    // Subscribe to connection events
+    webSocketService.subscribe("connect", handleConnect);
+    webSocketService.subscribe("disconnect", handleDisconnect);
+    webSocketService.subscribe("error", handleError);
 
     // Set initial connection state
-    setIsConnected(wsSocket.connected);
+    setIsConnected(webSocketService.isConnected);
 
     return () => {
-      wsSocket.off("connect", handleConnect);
-      wsSocket.off("disconnect", handleDisconnect);
+      webSocketService.unsubscribe("connect", handleConnect);
+      webSocketService.unsubscribe("disconnect", handleDisconnect);
+      webSocketService.unsubscribe("error", handleError);
     };
   }, []);
 
   return {
-    socket,
+    client,
     isConnected,
     subscribe: webSocketService.subscribe.bind(webSocketService),
     unsubscribe: webSocketService.unsubscribe.bind(webSocketService),
@@ -146,3 +210,4 @@ export const useWebSocket = () => {
 };
 
 export default webSocketService;
+

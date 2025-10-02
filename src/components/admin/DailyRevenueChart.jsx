@@ -2,13 +2,15 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { orderAPI } from "../../services/api";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Area,
+  AreaChart,
 } from "recharts";
 
 const DailyRevenueChart = ({ year, month }) => {
@@ -60,66 +62,108 @@ const DailyRevenueChart = ({ year, month }) => {
       {/* Chart */}
       <div className="h-80 w-full overflow-x-auto">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <AreaChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             className="min-w-full"
           >
-            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <defs>
+              <linearGradient id="dailyRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              className="opacity-30" 
+              stroke="hsl(var(--border))"
+            />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 10 }}
-              tickLine={{ stroke: "currentColor", opacity: 0.3 }}
+              tick={{ 
+                fontSize: 10, 
+                fill: "hsl(var(--muted-foreground))",
+                fontWeight: 500
+              }}
+              tickLine={{ stroke: "hsl(var(--border))", opacity: 0.5 }}
+              axisLine={{ stroke: "hsl(var(--border))", opacity: 0.5 }}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fontSize: 12 }}
-              tickLine={{ stroke: "currentColor", opacity: 0.3 }}
+              tick={{ 
+                fontSize: 12, 
+                fill: "hsl(var(--muted-foreground))",
+                fontWeight: 500
+              }}
+              tickLine={{ stroke: "hsl(var(--border))", opacity: 0.5 }}
+              axisLine={{ stroke: "hsl(var(--border))", opacity: 0.5 }}
               tickFormatter={(value) => `$${value.toFixed(0)}`}
             />
             <Tooltip
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-                      <p className="font-medium">Day {label}</p>
-                      <p className="text-primary font-semibold">
-                        Revenue: ${payload[0].value.toFixed(2)}
+                    <div className="bg-card border border-border rounded-lg p-4 shadow-lg backdrop-blur-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-primary"></div>
+                        <p className="font-medium text-foreground">Day {label}</p>
+                      </div>
+                      <p className="text-primary font-semibold text-lg mt-1">
+                        ${payload[0].value.toFixed(2)}
                       </p>
                     </div>
                   );
                 }
                 return null;
               }}
+              cursor={{ 
+                stroke: "hsl(var(--primary))", 
+                strokeWidth: 1, 
+                strokeDasharray: "5 5",
+                opacity: 0.5
+              }}
             />
-            <Bar
+            <Area
+              type="monotone"
               dataKey="revenue"
-              fill="hsl(var(--primary))"
-              radius={[2, 2, 0, 0]}
-              className="hover:opacity-80 transition-opacity"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              fill="url(#dailyRevenueGradient)"
+              dot={{ 
+                fill: "hsl(var(--primary))", 
+                strokeWidth: 2, 
+                stroke: "hsl(var(--background))",
+                r: 3
+              }}
+              activeDot={{ 
+                r: 5, 
+                stroke: "hsl(var(--primary))", 
+                strokeWidth: 2,
+                fill: "hsl(var(--background))"
+              }}
             />
-          </BarChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-4 gap-4 mt-6 p-4 bg-muted/50 rounded-lg">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Total Revenue</p>
-          <p className="text-lg font-semibold">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div className="bg-card border border-border rounded-lg p-4 text-center hover:bg-accent/50 transition-colors">
+          <p className="text-sm font-medium text-muted-foreground mb-1">Total Revenue</p>
+          <p className="text-xl font-bold text-foreground">
             ${chartData.reduce((sum, item) => sum + item.revenue, 0).toFixed(2)}
           </p>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Best Day</p>
-          <p className="text-lg font-semibold">
+        <div className="bg-card border border-border rounded-lg p-4 text-center hover:bg-accent/50 transition-colors">
+          <p className="text-sm font-medium text-muted-foreground mb-1">Best Day</p>
+          <p className="text-xl font-bold text-foreground">
             {chartData.find((item) => item.revenue === maxRevenue)?.day ||
               "N/A"}
           </p>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Average</p>
-          <p className="text-lg font-semibold">
+        <div className="bg-card border border-border rounded-lg p-4 text-center hover:bg-accent/50 transition-colors">
+          <p className="text-sm font-medium text-muted-foreground mb-1">Average</p>
+          <p className="text-xl font-bold text-foreground">
             $
             {(
               chartData.reduce((sum, item) => sum + item.revenue, 0) /
@@ -127,9 +171,9 @@ const DailyRevenueChart = ({ year, month }) => {
             ).toFixed(2)}
           </p>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Active Days</p>
-          <p className="text-lg font-semibold">
+        <div className="bg-card border border-border rounded-lg p-4 text-center hover:bg-accent/50 transition-colors">
+          <p className="text-sm font-medium text-muted-foreground mb-1">Active Days</p>
+          <p className="text-xl font-bold text-foreground">
             {chartData.filter((item) => item.revenue > 0).length}
           </p>
         </div>
@@ -137,7 +181,7 @@ const DailyRevenueChart = ({ year, month }) => {
 
       {/* Legend */}
       <div className="text-center text-xs text-muted-foreground">
-        <p>Hover over bars to see exact revenue amounts</p>
+        <p>Hover over the line to see exact revenue amounts</p>
       </div>
     </div>
   );

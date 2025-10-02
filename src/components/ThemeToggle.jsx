@@ -21,3 +21,4 @@ const ThemeToggle = ({ className = '' }) => {
 };
 
 export default ThemeToggle;
+

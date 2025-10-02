@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, userAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -16,15 +16,53 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+  const refreshUserDetails = async () => {
+    try {
+      const userResponse = await userAPI.getOwnAccountDetails();
+      const userDetails = userResponse.data.data;
+      
+      const userData = {
+        id: userDetails.id,
+        email: userDetails.email,
+        name: userDetails.name,
+        phoneNumber: userDetails.phoneNumber,
+        address: userDetails.address,
+        profileUrl: userDetails.profileUrl,
+        isActive: userDetails.active,
+        roles: userDetails.roles || []
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      
+      return userData;
+    } catch (error) {
+      console.error('Error refreshing user details:', error);
+      throw error;
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        
+        // Refresh user details to get the latest information
+        try {
+          await refreshUserDetails();
+        } catch (error) {
+          console.error('Error refreshing user details on load:', error);
+          // Keep the stored user data if refresh fails
+        }
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (credentials) => {
@@ -32,16 +70,39 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials);
       const { token, roles } = response.data.data;
       
-      const userData = {
-        email: credentials.email,
-        roles: roles
-      };
-      
+      // Store token first
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
       setToken(token);
-      setUser(userData);
+      
+      // Fetch user details to get the name and other info
+      try {
+        const userResponse = await userAPI.getOwnAccountDetails();
+        const userDetails = userResponse.data.data;
+        
+        const userData = {
+          id: userDetails.id,
+          email: userDetails.email,
+          name: userDetails.name,
+          phoneNumber: userDetails.phoneNumber,
+          address: userDetails.address,
+          profileUrl: userDetails.profileUrl,
+          isActive: userDetails.active,
+          roles: userDetails.roles || roles
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      } catch (userError) {
+        // Fallback if user details fetch fails
+        const userData = {
+          email: credentials.email,
+          name: credentials.email.split('@')[0],
+          roles: roles
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      }
       
       return response.data;
     } catch (error) {
@@ -70,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasRole = (role) => {
-    return user?.roles?.includes(role);
+    return user?.roles?.some(roleObj => roleObj.name === role);
   };
 
   const isAdmin = () => {
@@ -79,6 +140,28 @@ export const AuthProvider = ({ children }) => {
 
   const isCustomer = () => {
     return hasRole('CUSTOMER');
+  };
+
+  const updateUserProfile = async (updatedData) => {
+    try {
+      const response = await userAPI.updateOwnAccount(updatedData);
+      // Refresh user details after update
+      await refreshUserDetails();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deactivateAccount = async () => {
+    try {
+      const response = await userAPI.deactivateOwnAccount();
+      // Logout user after deactivation
+      logout();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const value = {
@@ -91,7 +174,10 @@ export const AuthProvider = ({ children }) => {
     hasRole,
     isAdmin,
     isCustomer,
-    loading
+    loading,
+    refreshUserDetails,
+    updateUserProfile,
+    deactivateAccount
   };
 
   return (

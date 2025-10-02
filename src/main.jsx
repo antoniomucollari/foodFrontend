@@ -1,3 +1,8 @@
+// Polyfill for global variable (required by STOMP.js in browser)
+if (typeof global === 'undefined') {
+  window.global = window;
+}
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

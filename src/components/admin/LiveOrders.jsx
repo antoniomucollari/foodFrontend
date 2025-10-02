@@ -1,290 +1,319 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { orderAPI } from "../../services/api";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import {
-  RotateCcw,
-  Clock,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Eye,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useWebSocket } from "../../services/websocket";
+import OrdersTable from "./OrdersTable";
 import OrderDetailModal from "./OrderDetailModal";
 
 const LiveOrders = () => {
-  const [orderStatus, setOrderStatus] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("");
-  const [searchId, setSearchId] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const {
-    data: ordersData,
-    refetch,
-    isLoading,
-  } = useQuery({
-    queryKey: ["live-orders", orderStatus, paymentStatus, searchId],
-    queryFn: () =>
-      orderAPI.getNewOrders({
-        orderStatus: orderStatus || undefined,
-        paymentStatus: paymentStatus || undefined,
-        searchId: searchId || undefined,
-        page: 0,
-        size: 20,
-      }),
-    refetchInterval: 5000, // Refetch every 5 seconds as backup
-  });
+  const [newOrderCount, setNewOrderCount] = useState(0);
 
   // WebSocket connection for real-time updates
-  const { socket, isConnected } = useWebSocket();
+  const { isConnected, subscribe, unsubscribe } = useWebSocket();
 
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('http://localhost:8080/api/orders/incomplete-orders?page=0&size=50', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming token is stored in localStorage
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      // Extract orders from the response
+      if (data.data && data.data.content) {
+        setOrders(data.data.content);
+        console.log('Orders found:', data.data.content);
+      } else {
+        console.log('No orders found in response');
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // WebSocket event handlers
   useEffect(() => {
-    if (socket && isConnected) {
-      // Listen for new orders
-      socket.on("newOrder", (order) => {
-        console.log("New order received:", order);
-        refetch();
-      });
-
-      // Listen for order updates
-      socket.on("orderUpdated", (order) => {
-        console.log("Order updated:", order);
-        refetch();
-      });
-
-      return () => {
-        socket.off("newOrder");
-        socket.off("orderUpdated");
+    if (isConnected) {
+      console.log('WebSocket connected, setting up listeners');
+      
+      // Handle new incomplete orders
+      const handleNewOrder = (order) => {
+        console.log('New incomplete order received via WebSocket:', order);
+        setOrders(prev => {
+          // Check if order already exists to avoid duplicates
+          const exists = prev.some(o => o.id === order.id);
+          if (!exists) {
+            console.log('Adding new order to list:', order.id);
+            setNewOrderCount(prev => prev + 1);
+            // Reset counter after 3 seconds
+            setTimeout(() => setNewOrderCount(0), 3000);
+            return [order, ...prev]; // Add new order at the top
+          }
+          console.log('Order already exists, not adding:', order.id);
+          return prev;
+        });
       };
-    }
-  }, [socket, isConnected, refetch]);
 
-  const orders = ordersData?.data?.data?.content || [];
-
-  const getOrderStatusColor = (status) => {
-    switch (status) {
-      case "INITIALIZED":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "CONFIRMED":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "ON_THE_WAY":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "DELIVERED":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "FAILED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    }
-  };
-
-  const getPaymentStatusColor = (status) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "PROCESSING":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "COMPLETED":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "REJECTED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "FAILED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "REFUNDED":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      // Handle order updates
+      const handleOrderUpdate = (order) => {
+        console.log('Order updated via WebSocket:', order);
+        setOrders(prev => {
+          // Check if order is still incomplete
+          const isIncomplete = isOrderIncomplete(order);
+          
+          if (isIncomplete) {
+            // Update existing order or add if not exists
+            const exists = prev.some(o => o.id === order.id);
+            if (exists) {
+              console.log('Updating existing order:', order.id);
+              return prev.map(o => o.id === order.id ? order : o);
+            } else {
+              console.log('Adding updated order:', order.id);
+              return [order, ...prev];
+            }
+          } else {
+            // Remove order if it's no longer incomplete
+            console.log('Removing completed order:', order.id);
+            return prev.filter(o => o.id !== order.id);
+          }
     });
   };
 
+      // Subscribe to WebSocket topics
+      subscribe("/topic/incompleteOrders", handleNewOrder);
+      subscribe("/topic/orderUpdates", handleOrderUpdate);
+
+      return () => {
+        console.log('Cleaning up WebSocket listeners');
+        unsubscribe("/topic/incompleteOrders", handleNewOrder);
+        unsubscribe("/topic/orderUpdates", handleOrderUpdate);
+      };
+    }
+  }, [isConnected, subscribe, unsubscribe]);
+
+  // Helper function to check if order is incomplete
+  const isOrderIncomplete = (order) => {
+    const incompleteOrderStatuses = ['INITIALIZED', 'CONFIRMED', 'ON_THE_WAY'];
+    const incompletePaymentStatuses = ['PENDING', 'PROCESSING', 'REJECTED', 'FAILED'];
+    
+    const isOrderIncomplete = incompleteOrderStatuses.includes(order.orderStatus);
+    const isPaymentIncomplete = incompletePaymentStatuses.includes(order.paymentStatus);
+    
+    return isOrderIncomplete || isPaymentIncomplete;
+  };
+
+  // Handle order status updates
   const handleUpdateOrderStatus = async (orderId, newStatus, statusType) => {
     try {
-      const updateData = { id: orderId };
-      if (statusType === "orderStatus") {
-        updateData.orderStatus = newStatus;
-      } else if (statusType === "paymentStatus") {
-        updateData.paymentStatus = newStatus;
+      console.log('Updating order status:', { orderId, newStatus, statusType });
+      
+      // Validate orderId
+      if (!orderId) {
+        console.error('Order ID is null or undefined');
+        return;
       }
 
-      await orderAPI.updateOrderStatus(updateData);
-      refetch();
-    } catch (error) {
-      console.error("Error updating order status:", error);
+      // Create OrderDTO object as expected by backend
+      const orderDTO = {
+        id: orderId,
+        [statusType]: newStatus
+      };
+
+      // First, update the order status
+      const response = await fetch(`http://localhost:8080/api/orders/update-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(orderDTO)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Update failed:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      console.log(`Order ${orderId} ${statusType} updated to ${newStatus}`);
+
+      // Then refresh the incomplete orders
+      await fetchOrders();
+
+    } catch (err) {
+      console.error('Error updating order status:', err);
     }
   };
 
+  // Handle view order details
   const handleViewOrderDetails = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
 
+  // Handle close modal
   const handleCloseModal = () => {
-    setIsModalOpen(false);
     setSelectedOrder(null);
+    setIsModalOpen(false);
   };
 
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
   return (
-    <div className="space-y-6 p-6 w-full">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      {/* Real-time Header */}
+      <div className="bg-white dark:bg-slate-800 shadow-lg border-b border-slate-200 dark:border-slate-700">
+        <div className="px-6 py-4">
       <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-3">
+                <div className="relative">
           <div
-            className={`w-3 h-3 rounded-full ${
+                    className={`w-4 h-4 rounded-full ${
               isConnected ? "bg-green-500" : "bg-red-500"
             }`}
           />
-          <h1 className="text-2xl font-semibold text-foreground">
+                  {isConnected && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  )}
+                </div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             Live Orders
           </h1>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                    LIVE
+                  </span>
+                </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4" />
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg">
-        <select
-          value={orderStatus}
-          onChange={(e) => setOrderStatus(e.target.value)}
-          className="px-3 py-2 border border-border rounded bg-background text-foreground text-sm h-9"
-        >
-          <option value="">All Active Orders</option>
-          <option value="INITIALIZED">Initialized</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="ON_THE_WAY">On The Way</option>
-        </select>
-
-        <select
-          value={paymentStatus}
-          onChange={(e) => setPaymentStatus(e.target.value)}
-          className="px-3 py-2 border border-border rounded bg-background text-foreground text-sm h-9"
-        >
-          <option value="">Incomplete Payments</option>
-          <option value="PENDING">Pending</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="REJECTED">Rejected</option>
-          <option value="FAILED">Failed</option>
-        </select>
-
-        <input
-          type="text"
-          placeholder="Order ID..."
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          className="px-3 py-2 border border-border rounded bg-background text-foreground text-sm h-9 flex-1 max-w-xs"
-        />
+            <div className="flex items-center space-x-4">
+              <div className="text-right relative">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {orders.length}
+                </div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  Active Orders
+                </div>
+                {newOrderCount > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
+                    {newOrderCount}
+                  </div>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchOrders} 
+                disabled={loading}
+                className="shadow-sm"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Orders List */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-          <span>Loading...</span>
+      {/* Main Content */}
+      <div className="p-6">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-500" />
+              <p className="text-slate-600 dark:text-slate-400">Loading live orders...</p>
+            </div>
         </div>
       )}
 
-      {!isLoading && orders.length === 0 && (
-        <div className="text-center py-8">
-          <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            No active orders requiring attention
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Orders with incomplete payments or pending status
-          </p>
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                Connection Error
+              </h3>
+              <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+                {error}
+              </p>
+              <Button onClick={fetchOrders} className="bg-red-600 hover:bg-red-700">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Connection
+              </Button>
+      </div>
         </div>
       )}
 
-      {!isLoading && orders.length > 0 && (
-        <div className="space-y-2">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div>
-                    <h3 className="font-medium text-sm">#{order.id}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {order.user?.email}
+        {/* No Orders State */}
+        {!loading && !error && orders.length === 0 && (
+          <div className="text-center py-16">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md mx-auto">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="h-8 w-8 text-slate-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                All Caught Up!
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                No orders requiring attention at the moment
                     </p>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatDate(order.orderDate)}
                   </div>
-                  <div className="font-medium text-sm">
-                    ${order.totalAmount?.toFixed(2)}
-                  </div>
-                </div>
+      )}
 
+        {/* Orders Table */}
+        {!loading && !error && orders.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Active Orders
+                </h2>
                 <div className="flex items-center space-x-2">
-                  <select
-                    value={order.orderStatus || ""}
-                    onChange={(e) =>
-                      handleUpdateOrderStatus(
-                        order.id,
-                        e.target.value,
-                        "orderStatus"
-                      )
-                    }
-                    className="text-xs px-2 py-1 border border-border rounded bg-background text-foreground min-w-[120px]"
-                  >
-                    <option value="INITIALIZED">Initialized</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="ON_THE_WAY">On The Way</option>
-                    <option value="DELIVERED">Delivered</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
-
-                  <select
-                    value={order.paymentStatus || ""}
-                    onChange={(e) =>
-                      handleUpdateOrderStatus(
-                        order.id,
-                        e.target.value,
-                        "paymentStatus"
-                      )
-                    }
-                    className="text-xs px-2 py-1 border border-border rounded bg-background text-foreground min-w-[120px]"
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="PROCESSING">Processing</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="REJECTED">Rejected</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleViewOrderDetails(order)}
-                    className="h-6 w-6 p-0"
-                    title="View Details"
-                  >
-                    <Eye className="h-3 w-3" />
-                  </Button>
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                    Real-time Updates
+                  </span>
                 </div>
               </div>
             </div>
-          ))}
+            <div className="overflow-x-auto">
+              <OrdersTable 
+                orders={orders}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+                onViewOrderDetails={handleViewOrderDetails}
+                showStatusControls={true}
+              />
+            </div>
         </div>
       )}
 
@@ -294,6 +323,7 @@ const LiveOrders = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+      </div>
     </div>
   );
 };
