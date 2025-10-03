@@ -1,23 +1,29 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { categoryAPI, menuAPI, reviewAPI } from '../services/api';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Search, Star, Plus, Minus, ShoppingCart } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
-import { cartAPI } from '../services/api';
+import React, { useState, useRef, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { categoryAPI, menuAPI, reviewAPI } from "../services/api";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Search, Star, Plus, Minus, ShoppingCart } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
+import { cartAPI } from "../services/api";
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [cartItems, setCartItems] = useState({});
   const searchInputRef = useRef(null);
   const { isAuthenticated } = useAuth();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
 
   // Debounce search term to prevent excessive API calls
   React.useEffect(() => {
@@ -42,22 +48,23 @@ const Menu = () => {
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: () => categoryAPI.getAllCategories(),
   });
 
   // Fetch menu items
   const { data: menuData, isLoading: menuLoading } = useQuery({
-    queryKey: ['menu', selectedCategory, debouncedSearchTerm],
-    queryFn: () => menuAPI.getMenus({ 
-      categoryId: selectedCategory, 
-      searchTerm: debouncedSearchTerm || undefined 
-    }),
+    queryKey: ["menu", selectedCategory, debouncedSearchTerm],
+    queryFn: () =>
+      menuAPI.getMenus({
+        categoryId: selectedCategory,
+        searchTerm: debouncedSearchTerm || undefined,
+      }),
   });
 
   // Fetch cart
   const { data: cartData, refetch: refetchCart } = useQuery({
-    queryKey: ['cart'],
+    queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
     enabled: isAuthenticated(),
   });
@@ -68,20 +75,20 @@ const Menu = () => {
   const handleAddToCart = async (menuId, event) => {
     event.stopPropagation(); // Prevent card click from firing
     if (!isAuthenticated()) {
-      showSuccess('Please login to add items to cart');
+      showError("Please login to add items to cart");
       return;
     }
 
     try {
       await cartAPI.addToCart({
         menuId,
-        quantity: 1
+        quantity: 1,
       });
       refetchCart();
-      showSuccess('Item added to cart successfully!');
+      showSuccess("Item added to cart successfully!");
     } catch (error) {
       // Error is handled by global error handler
-      console.error('Error adding to cart:', error);
+      console.error("Error adding to cart:", error);
     }
   };
 
@@ -91,7 +98,7 @@ const Menu = () => {
       await cartAPI.incrementItem(menuId);
       refetchCart();
     } catch (error) {
-      console.error('Error incrementing item:', error);
+      console.error("Error incrementing item:", error);
     }
   };
 
@@ -101,19 +108,21 @@ const Menu = () => {
       await cartAPI.decrementItem(menuId);
       refetchCart();
     } catch (error) {
-      console.error('Error decrementing item:', error);
+      console.error("Error decrementing item:", error);
     }
   };
 
   const getCartQuantity = (menuId) => {
     if (!cartData?.data?.data?.cartItems) return 0;
-    const cartItem = cartData.data.data.cartItems.find(item => item.menu?.id === menuId);
+    const cartItem = cartData.data.data.cartItems.find(
+      (item) => item.menu?.id === menuId
+    );
     return cartItem?.quantity || 0;
   };
 
   // Get average rating for a menu item
   const { data: averageRatings } = useQuery({
-    queryKey: ['average-ratings', menuItems.map(item => item.id)],
+    queryKey: ["average-ratings", menuItems.map((item) => item.id)],
     queryFn: async () => {
       const ratings = {};
       for (const item of menuItems) {
@@ -141,8 +150,8 @@ const Menu = () => {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Menu</h1>
-        <p className="text-lg text-gray-600">
+        <h1 className="text-4xl font-bold text-foreground mb-4">Our Menu</h1>
+        <p className="text-lg text-muted-foreground">
           Discover delicious food from our carefully curated menu
         </p>
       </div>
@@ -195,14 +204,14 @@ const Menu = () => {
         {menuItems.map((item) => {
           const cartQuantity = getCartQuantity(item.id);
           return (
-            <Card 
-              key={item.id} 
+            <Card
+              key={item.id}
               className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => window.open(`/menu/${item.id}`, '_blank')}
+              onClick={() => window.open(`/menu/${item.id}`, "_blank")}
             >
               <div className="aspect-w-16 aspect-h-9">
                 <img
-                  src={item.imageUrl || '/placeholder-food.jpg'}
+                  src={item.imageUrl || "/placeholder-food.jpg"}
                   alt={item.name}
                   className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
                 />
@@ -210,26 +219,28 @@ const Menu = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl">{item.name}</CardTitle>
-                  <Badge variant="secondary">
-                    ${item.price?.toFixed(2)}
-                  </Badge>
+                  <Badge variant="secondary">${item.price?.toFixed(2)}</Badge>
                 </div>
                 <CardDescription className="text-sm">
                   {item.description}
                 </CardDescription>
                 <div className="mt-2">
-                  <span className="text-xs text-blue-600 font-medium">Click to view details & reviews →</span>
+                  <span className="text-xs text-blue-600 font-medium">
+                    Click to view details & reviews →
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600">
-                        {averageRatings?.[item.id] ? averageRatings[item.id].toFixed(1) : 'No rating'}
-                      </span>
-                    </div>
-                  
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <span className="text-sm text-gray-600">
+                      {averageRatings?.[item.id]
+                        ? averageRatings[item.id].toFixed(1)
+                        : "No rating"}
+                    </span>
+                  </div>
+
                   {isAuthenticated() ? (
                     <div className="flex items-center space-x-2">
                       {cartQuantity > 0 ? (
@@ -242,7 +253,9 @@ const Menu = () => {
                           >
                             <Minus className="h-4 w-4 transition-transform duration-200" />
                           </Button>
-                          <span className="text-sm font-medium">{cartQuantity}</span>
+                          <span className="text-sm font-medium">
+                            {cartQuantity}
+                          </span>
                           <Button
                             size="sm"
                             variant="outline"
@@ -269,7 +282,7 @@ const Menu = () => {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert('Please login to add items to cart');
+                        showError("Please login to add items to cart");
                       }}
                     >
                       <ShoppingCart className="h-4 w-4 mr-2" />

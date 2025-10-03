@@ -40,87 +40,75 @@ function App() {
           <CartProvider>
             <ToastProvider>
               <Router>
-            <div className="min-h-screen bg-background text-foreground">
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="admin"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                  <Route path="dashboard" element={<DashboardHome />} />
-                  <Route path="live-orders" element={<LiveOrders />} />
-                  <Route path="all-orders" element={<AllOrders />} />
-                  <Route path="categories" element={<CategoriesManagement />} />
-                  <Route path="menuItems" element={<MenuItemsManagement />} />
-                  <Route path="graphs" element={<GraphsSection />} />
-                </Route>
-                <Route path="/" element={<Layout />}>
-                  <Route
-                    index
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <Home />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="menu"
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <Menu />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="menu/:id"
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <MenuItemDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="cart"
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <Cart />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="orders"
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <Orders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="profile"
-                    element={
-                      <ProtectedRoute restrictAdmin>
-                        <Profile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="new-orders"
-                    element={
-                      <ProtectedRoute requireAdmin>
-                        <NewOrders />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Route>
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
+                <div className="min-h-screen bg-background text-foreground">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route
+                      path="admin"
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route
+                        index
+                        element={<Navigate to="dashboard" replace />}
+                      />
+                      <Route path="dashboard" element={<DashboardHome />} />
+                      <Route path="live-orders" element={<LiveOrders />} />
+                      <Route path="all-orders" element={<AllOrders />} />
+                      <Route
+                        path="categories"
+                        element={<CategoriesManagement />}
+                      />
+                      <Route
+                        path="menuItems"
+                        element={<MenuItemsManagement />}
+                      />
+                      <Route path="graphs" element={<GraphsSection />} />
+                    </Route>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<Home />} />
+                      <Route path="menu" element={<Menu />} />
+                      <Route path="menu/:id" element={<MenuItemDetail />} />
+                      <Route
+                        path="cart"
+                        element={
+                          <ProtectedRoute>
+                            <Cart />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="orders"
+                        element={
+                          <ProtectedRoute>
+                            <Orders />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="profile"
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="new-orders"
+                        element={
+                          <ProtectedRoute requireAdmin>
+                            <NewOrders />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </div>
               </Router>
             </ToastProvider>
           </CartProvider>

@@ -30,9 +30,7 @@ const Layout = () => {
   ];
 
   if (isAuthenticated()) {
-    navigation.push(
-      { name: "Orders", href: "/orders", icon: User }
-    );
+    navigation.push({ name: "Orders", href: "/orders", icon: User });
   }
 
   // Admin users will access dashboard directly via URL
@@ -99,18 +97,24 @@ const Layout = () => {
                   >
                     <UserCircle className="h-4 w-4" />
                   </Link>
-                  {/* Cart Icon with Count */}
-                  <Link
-                    to="/cart"
-                    className="relative flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent hover:scale-105"
-                  >
-                    <ShoppingCart className={`h-4 w-4 transition-transform duration-200 ${isCartAnimating ? 'animate-bounce' : ''}`} />
-                    {cartItemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                        {cartItemCount}
-                      </span>
-                    )}
-                  </Link>
+                  {/* Cart Icon with Count - Only show for authenticated users */}
+                  {isAuthenticated() && (
+                    <Link
+                      to="/cart"
+                      className="relative flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent hover:scale-105"
+                    >
+                      <ShoppingCart
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          isCartAnimating ? "animate-bounce" : ""
+                        }`}
+                      />
+                      {cartItemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                   <Button variant="outline" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -183,20 +187,26 @@ const Layout = () => {
                     <UserCircle className="h-5 w-5" />
                     <span>Profile</span>
                   </Link>
-                  {/* Cart Link with Count */}
-                  <Link
-                    to="/cart"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent relative hover:scale-105"
-                  >
-                    <ShoppingCart className={`h-5 w-5 transition-transform duration-200 ${isCartAnimating ? 'animate-bounce' : ''}`} />
-                    <span>Cart</span>
-                    {cartItemCount > 0 && (
-                      <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                        {cartItemCount}
-                      </span>
-                    )}
-                  </Link>
+                  {/* Cart Link with Count - Only show for authenticated users */}
+                  {isAuthenticated() && (
+                    <Link
+                      to="/cart"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent relative hover:scale-105"
+                    >
+                      <ShoppingCart
+                        className={`h-5 w-5 transition-transform duration-200 ${
+                          isCartAnimating ? "animate-bounce" : ""
+                        }`}
+                      />
+                      <span>Cart</span>
+                      {cartItemCount > 0 && (
+                        <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                   <Button
                     variant="outline"
                     className="w-full justify-start mt-2"

@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { ChefHat, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { ChefHat, Eye, EyeOff } from "lucide-react";
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
 });
@@ -22,9 +28,16 @@ const registerSchema = z.object({
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
+
+  // Redirect logged-in users to home page
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const {
     register,
@@ -36,27 +49,26 @@ const Register = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    
+
     try {
       // Add default role for new users
       const userData = {
         ...data,
-        roles: ['CUSTOMER']
+        roles: ["CUSTOMER"],
       };
-      
+
       await registerUser(userData);
-      showSuccess('Registration successful! Please log in to continue.');
+      showSuccess("Registration successful! Please log in to continue.");
       setTimeout(() => {
-        navigate('/login');
+        navigate("/login");
       }, 2000);
     } catch (err) {
       // Error is handled by global error handler
-      console.error('Registration error:', err);
+      console.error("Registration error:", err);
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
@@ -71,7 +83,7 @@ const Register = () => {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Or{' '}
+            Or{" "}
             <Link
               to="/login"
               className="font-medium text-primary hover:text-primary/80"
@@ -90,18 +102,19 @@ const Register = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
                   id="name"
                   type="text"
                   placeholder="Enter your full name"
-                  {...register('name')}
-                  className={errors.name ? 'border-destructive' : ''}
+                  {...register("name")}
+                  className={errors.name ? "border-destructive" : ""}
                 />
                 {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -111,11 +124,13 @@ const Register = () => {
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  {...register('email')}
-                  className={errors.email ? 'border-destructive' : ''}
+                  {...register("email")}
+                  className={errors.email ? "border-destructive" : ""}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -124,10 +139,12 @@ const Register = () => {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    {...register('password')}
-                    className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                    {...register("password")}
+                    className={
+                      errors.password ? "border-destructive pr-10" : "pr-10"
+                    }
                   />
                   <button
                     type="button"
@@ -142,7 +159,9 @@ const Register = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -152,7 +171,7 @@ const Register = () => {
                   id="phoneNumber"
                   type="tel"
                   placeholder="Enter your phone number"
-                  {...register('phoneNumber')}
+                  {...register("phoneNumber")}
                 />
               </div>
 
@@ -162,12 +181,12 @@ const Register = () => {
                   id="address"
                   type="text"
                   placeholder="Enter your address"
-                  {...register('address')}
+                  {...register("address")}
                 />
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating account...' : 'Create account'}
+                {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </form>
           </CardContent>

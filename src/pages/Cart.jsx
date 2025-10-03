@@ -1,33 +1,43 @@
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { cartAPI, orderAPI } from '../services/api';
-import { useToast } from '../contexts/ToastContext';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  Trash2, 
+import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { cartAPI, orderAPI } from "../services/api";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
   CreditCard,
   ArrowLeft,
   CheckCircle,
   Truck,
-  Wallet
-} from 'lucide-react';
-import { useState } from 'react';
+  Wallet,
+} from "lucide-react";
+import { useState } from "react";
 
 const Cart = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('delivery'); // 'delivery' or 'card'
+  const [paymentMethod, setPaymentMethod] = useState("delivery"); // 'delivery' or 'card'
   const queryClient = useQueryClient();
   const { showSuccess, showError, showConfirm } = useToast();
 
   // Fetch cart data
-  const { data: cartData, isLoading, error } = useQuery({
-    queryKey: ['cart'],
+  const {
+    data: cartData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
   });
 
@@ -35,42 +45,42 @@ const Cart = () => {
   const incrementMutation = useMutation({
     mutationFn: (menuId) => cartAPI.incrementItem(menuId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
+      queryClient.invalidateQueries(["cart"]);
     },
   });
 
   const decrementMutation = useMutation({
     mutationFn: (menuId) => cartAPI.decrementItem(menuId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
+      queryClient.invalidateQueries(["cart"]);
     },
   });
 
   const removeItemMutation = useMutation({
     mutationFn: (cartItemId) => cartAPI.removeItem(cartItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
+      queryClient.invalidateQueries(["cart"]);
     },
   });
 
   const clearCartMutation = useMutation({
     mutationFn: () => cartAPI.clearCart(),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
+      queryClient.invalidateQueries(["cart"]);
     },
   });
 
   const checkoutMutation = useMutation({
     mutationFn: () => orderAPI.checkout(),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
-      queryClient.invalidateQueries(['orders']);
+      queryClient.invalidateQueries(["cart"]);
+      queryClient.invalidateQueries(["orders"]);
       setIsCheckingOut(false);
-      showSuccess('Order placed successfully!');
+      showSuccess("Order placed successfully!");
     },
     onError: (error) => {
       // Error is handled by global error handler
-      console.error('Checkout error:', error);
+      console.error("Checkout error:", error);
       setIsCheckingOut(false);
     },
   });
@@ -85,15 +95,15 @@ const Cart = () => {
 
   const handleRemoveItem = async (cartItemId) => {
     const confirmed = await showConfirm(
-      'Remove Item',
-      'Are you sure you want to remove this item from your cart?',
+      "Remove Item",
+      "Are you sure you want to remove this item from your cart?",
       {
-        confirmText: 'Remove',
-        cancelText: 'Cancel',
-        type: 'warning'
+        confirmText: "Remove",
+        cancelText: "Cancel",
+        type: "warning",
       }
     );
-    
+
     if (confirmed) {
       removeItemMutation.mutate(cartItemId);
     }
@@ -101,28 +111,30 @@ const Cart = () => {
 
   const handleClearCart = async () => {
     const confirmed = await showConfirm(
-      'Clear Cart',
-      'Are you sure you want to clear your cart? This will remove all items.',
+      "Clear Cart",
+      "Are you sure you want to clear your cart? This will remove all items.",
       {
-        confirmText: 'Clear Cart',
-        cancelText: 'Cancel',
-        type: 'warning'
+        confirmText: "Clear Cart",
+        cancelText: "Cancel",
+        type: "warning",
       }
     );
-    
+
     if (confirmed) {
       clearCartMutation.mutate();
     }
   };
 
   const handleCheckout = () => {
-    if (paymentMethod === 'delivery') {
+    if (paymentMethod === "delivery") {
       // Continue with normal checkout for pay on delivery
       setIsCheckingOut(true);
       checkoutMutation.mutate();
-    } else if (paymentMethod === 'card') {
+    } else if (paymentMethod === "card") {
       // Disable checkout for card payment (to be implemented by user)
-      showError('Card payment integration will be implemented separately. Please select "Pay on Delivery" for now.');
+      showError(
+        'Card payment integration will be implemented separately. Please select "Pay on Delivery" for now.'
+      );
       return;
     }
   };
@@ -138,7 +150,7 @@ const Cart = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500 text-lg">Error loading cart</p>
+        <p className="text-destructive text-lg">Error loading cart</p>
       </div>
     );
   }
@@ -151,20 +163,22 @@ const Cart = () => {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" asChild>
-            <Link to="/menu">
+          <Button variant="outline" asChild className="flex items-center">
+            <Link to="/menu" className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Menu
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+          <h1 className="text-3xl font-bold text-foreground">Shopping Cart</h1>
         </div>
 
         <Card className="text-center py-12">
           <CardContent>
-            <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-6">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-muted-foreground mb-6">
               Looks like you haven't added any items to your cart yet.
             </p>
             <Button asChild>
@@ -180,13 +194,13 @@ const Cart = () => {
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" asChild>
-            <Link to="/menu">
+          <Button variant="outline" asChild className="flex items-center">
+            <Link to="/menu" className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Menu
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+          <h1 className="text-3xl font-bold text-foreground">Shopping Cart</h1>
         </div>
         <Button
           variant="outline"
@@ -206,13 +220,15 @@ const Cart = () => {
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
                   <img
-                    src={item.menu?.imageUrl || '/placeholder-food.jpg'}
+                    src={item.menu?.imageUrl || "/placeholder-food.jpg"}
                     alt={item.menu?.name}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold">{item.menu?.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {item.menu?.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-2">
                       {item.menu?.description}
                     </p>
                     <div className="flex items-center justify-between">
@@ -238,10 +254,10 @@ const Cart = () => {
                         </Button>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold">
+                        <p className="text-lg font-semibold text-foreground">
                           ${item.subTotal?.toFixed(2)}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           ${item.pricePerUnit?.toFixed(2)} each
                         </p>
                       </div>
@@ -268,20 +284,20 @@ const Cart = () => {
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-foreground">
                 <span>Items ({cartItems.length})</span>
                 <span>${totalAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-foreground">
                 <span>Delivery Fee</span>
                 <span>$0.00</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-foreground">
                 <span>Tax</span>
                 <span>$0.00</span>
               </div>
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-lg font-semibold">
+              <div className="border-t border-border pt-4">
+                <div className="flex justify-between text-lg font-semibold text-foreground">
                   <span>Total</span>
                   <span>${totalAmount.toFixed(2)}</span>
                 </div>
@@ -289,44 +305,66 @@ const Cart = () => {
 
               {/* Payment Method Selection */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-900">Payment Method</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  Payment Method
+                </h3>
                 <div className="space-y-2">
-                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center space-x-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="delivery"
-                      checked={paymentMethod === 'delivery'}
+                      checked={paymentMethod === "delivery"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      className="h-4 w-4 text-primary focus:ring-primary border-border"
                     />
-                    <Truck className="h-5 w-5 text-gray-600" />
+                    <Truck className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">Pay on Delivery</div>
-                      <div className="text-xs text-gray-500">Pay when your order arrives</div>
+                      <div className="text-sm font-medium text-foreground">
+                        Pay on Delivery
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Pay when your order arrives
+                      </div>
                     </div>
-                    <CheckCircle className={`h-5 w-5 ${paymentMethod === 'delivery' ? 'text-green-500' : 'text-gray-300'}`} />
+                    <CheckCircle
+                      className={`h-5 w-5 ${
+                        paymentMethod === "delivery"
+                          ? "text-green-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
                   </label>
 
-                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center space-x-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="card"
-                      checked={paymentMethod === 'card'}
+                      checked={paymentMethod === "card"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      className="h-4 w-4 text-primary focus:ring-primary border-border"
                     />
-                    <Wallet className="h-5 w-5 text-gray-600" />
+                    <Wallet className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">Pay with Card</div>
-                      <div className="text-xs text-gray-500">Credit/Debit card payment</div>
+                      <div className="text-sm font-medium text-foreground">
+                        Pay with Card
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Credit/Debit card payment
+                      </div>
                     </div>
-                    <CheckCircle className={`h-5 w-5 ${paymentMethod === 'card' ? 'text-green-500' : 'text-gray-300'}`} />
+                    <CheckCircle
+                      className={`h-5 w-5 ${
+                        paymentMethod === "card"
+                          ? "text-green-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
                   </label>
                 </div>
               </div>
-              
+
               <Button
                 className="w-full"
                 size="lg"
@@ -340,7 +378,7 @@ const Cart = () => {
                   </>
                 ) : (
                   <>
-                    {paymentMethod === 'delivery' ? (
+                    {paymentMethod === "delivery" ? (
                       <>
                         <Truck className="h-4 w-4 mr-2" />
                         Checkout - Pay on Delivery
@@ -355,11 +393,10 @@ const Cart = () => {
                 )}
               </Button>
 
-              <p className="text-xs text-gray-500 text-center">
-                {paymentMethod === 'delivery' 
-                  ? 'You will be redirected to complete your order' 
-                  : 'Card payment integration coming soon - please select "Pay on Delivery" for now'
-                }
+              <p className="text-xs text-muted-foreground text-center">
+                {paymentMethod === "delivery"
+                  ? "You will be redirected to complete your order"
+                  : 'Card payment integration coming soon - please select "Pay on Delivery" for now'}
               </p>
             </CardContent>
           </Card>

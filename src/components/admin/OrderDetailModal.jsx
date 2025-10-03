@@ -58,7 +58,8 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
   };
 
   const calculateItemTotal = (item) => {
-    const price = item.menu?.price || item.menuItem?.price || item.pricePerUnit || 0;
+    const price =
+      item.menu?.price || item.menuItem?.price || item.pricePerUnit || 0;
     return item.quantity * price;
   };
 
@@ -66,9 +67,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Order Details - #{order.id}
-          </DialogTitle>
+          <DialogTitle>Order Details - #{order.id}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -117,9 +116,11 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                   <p className="text-sm text-muted-foreground">Name</p>
                   <p className="font-medium">
                     {order.user?.name ||
-                    (order.user?.firstName && order.user?.lastName)
-                      ? `${order.user.firstName} ${order.user.lastName}`
-                      : "N/A"}
+                      (order.user?.firstName && order.user?.lastName
+                        ? `${order.user.firstName} ${order.user.lastName}`
+                        : order.user?.firstName ||
+                          order.user?.lastName ||
+                          "N/A")}
                   </p>
                 </div>
                 <div>
@@ -173,44 +174,65 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                     {/* Menu Item Image */}
                     <div className="flex-shrink-0">
                       <img
-                        src={item.menu?.imageUrl || item.menuItem?.imageUrl || '/placeholder-food.jpg'}
-                        alt={item.menu?.name || item.menuItem?.name || `Item ${index + 1}`}
+                        src={
+                          item.menu?.imageUrl ||
+                          item.menuItem?.imageUrl ||
+                          "/placeholder-food.jpg"
+                        }
+                        alt={
+                          item.menu?.name ||
+                          item.menuItem?.name ||
+                          `Item ${index + 1}`
+                        }
                         className="w-20 h-20 object-cover rounded-lg border border-border"
                         onError={(e) => {
-                          e.target.src = '/placeholder-food.jpg';
+                          e.target.src = "/placeholder-food.jpg";
                         }}
                       />
                     </div>
-                    
+
                     {/* Menu Item Details */}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-lg mb-1">
-                        {item.menu?.name || item.menuItem?.name || `Item ${index + 1}`}
+                        {item.menu?.name ||
+                          item.menuItem?.name ||
+                          `Item ${index + 1}`}
                       </h4>
                       {item.menu?.description || item.menuItem?.description ? (
-                        <p className="text-sm text-muted-foreground mb-2 overflow-hidden" style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical'
-                        }}>
+                        <p
+                          className="text-sm text-muted-foreground mb-2 overflow-hidden"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}
+                        >
                           {item.menu?.description || item.menuItem?.description}
                         </p>
                       ) : null}
-                      
+
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <span className="flex items-center">
                           <span className="font-medium">Qty:</span>
-                          <span className="ml-1 font-semibold text-foreground">{item.quantity}</span>
+                          <span className="ml-1 font-semibold text-foreground">
+                            {item.quantity}
+                          </span>
                         </span>
                         <span className="flex items-center">
                           <span className="font-medium">Price:</span>
                           <span className="ml-1 font-semibold text-foreground">
-                            ${(item.menu?.price || item.menuItem?.price || item.pricePerUnit || 0).toFixed(2)}
+                            $
+                            {(
+                              item.menu?.price ||
+                              item.menuItem?.price ||
+                              item.pricePerUnit ||
+                              0
+                            ).toFixed(2)}
                           </span>
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Total Price */}
                     <div className="flex-shrink-0 text-right">
                       <p className="text-lg font-bold text-primary">
@@ -220,20 +242,29 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Order Summary */}
                 {order.orderItems && order.orderItems.length > 0 && (
                   <div className="border-t border-border pt-4 mt-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold">Order Total:</span>
+                      <span className="text-lg font-semibold">
+                        Order Total:
+                      </span>
                       <span className="text-xl font-bold text-primary">
                         ${order.totalAmount?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
-                      <span>{order.orderItems.length} item{order.orderItems.length !== 1 ? 's' : ''}</span>
                       <span>
-                        {order.orderItems.reduce((total, item) => total + item.quantity, 0)} total quantity
+                        {order.orderItems.length} item
+                        {order.orderItems.length !== 1 ? "s" : ""}
+                      </span>
+                      <span>
+                        {order.orderItems.reduce(
+                          (total, item) => total + item.quantity,
+                          0
+                        )}{" "}
+                        total quantity
                       </span>
                     </div>
                   </div>

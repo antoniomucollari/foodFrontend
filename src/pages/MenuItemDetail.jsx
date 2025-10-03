@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { menuAPI, reviewAPI, cartAPI, orderAPI } from '../services/api';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { 
-  Star, 
-  ArrowLeft, 
-  Plus, 
-  Minus, 
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { menuAPI, reviewAPI, cartAPI, orderAPI } from "../services/api";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Star,
+  ArrowLeft,
+  Plus,
+  Minus,
   ShoppingCart,
   Clock,
   User,
   MessageSquare,
-  Package
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
+  Package,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 
 const MenuItemDetail = () => {
   const { id } = useParams();
@@ -27,44 +33,48 @@ const MenuItemDetail = () => {
   const { isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [selectedOrderId, setSelectedOrderId] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState("");
   const [newReview, setNewReview] = useState({
     rating: 0,
-    comment: '',
+    comment: "",
     menuId: parseInt(id),
-    orderId: null
+    orderId: null,
   });
   const [hoveredRating, setHoveredRating] = useState(0);
   const queryClient = useQueryClient();
 
   // Fetch menu item details
-  const { data: menuData, isLoading: menuLoading, error: menuError } = useQuery({
-    queryKey: ['menu-item', id],
+  const {
+    data: menuData,
+    isLoading: menuLoading,
+    error: menuError,
+  } = useQuery({
+    queryKey: ["menu-item", id],
     queryFn: () => menuAPI.getMenuById(id),
   });
 
   // Fetch reviews for this menu item
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery({
-    queryKey: ['reviews', id],
+    queryKey: ["reviews", id],
     queryFn: () => reviewAPI.getReviewsForMenu(id),
   });
 
   // Fetch average rating
   const { data: averageRatingData } = useQuery({
-    queryKey: ['average-rating', id],
+    queryKey: ["average-rating", id],
     queryFn: () => reviewAPI.getAverageRating(id),
   });
 
   // Fetch cart data
   const { data: cartData } = useQuery({
-    queryKey: ['cart'],
+    queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
     enabled: isAuthenticated(),
   });
 
   // Fetch user's delivered orders that contain this menu item
   const { data: ordersData } = useQuery({
-    queryKey: ['user-orders-for-review', id],
+    queryKey: ["user-orders-for-review", id],
     queryFn: () => orderAPI.getMyOrders(),
     enabled: isAuthenticated(),
   });
@@ -73,67 +83,72 @@ const MenuItemDetail = () => {
   const addToCartMutation = useMutation({
     mutationFn: (cartData) => cartAPI.addToCart(cartData),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
-      showSuccess('Item added to cart successfully!');
+      queryClient.invalidateQueries(["cart"]);
+      showSuccess("Item added to cart successfully!");
     },
     onError: (error) => {
       // Error is handled by global error handler
-      console.error('Add to cart error:', error);
+      console.error("Add to cart error:", error);
     },
   });
 
   const incrementMutation = useMutation({
     mutationFn: (menuId) => cartAPI.incrementItem(menuId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
-      showSuccess('Quantity updated!');
+      queryClient.invalidateQueries(["cart"]);
+      showSuccess("Quantity updated!");
     },
     onError: (error) => {
       // Error is handled by global error handler
-      console.error('Increment error:', error);
+      console.error("Increment error:", error);
     },
   });
 
   const decrementMutation = useMutation({
     mutationFn: (menuId) => cartAPI.decrementItem(menuId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cart']);
-      showSuccess('Quantity updated!');
+      queryClient.invalidateQueries(["cart"]);
+      showSuccess("Quantity updated!");
     },
     onError: (error) => {
       // Error is handled by global error handler
-      console.error('Decrement error:', error);
+      console.error("Decrement error:", error);
     },
   });
 
   const createReviewMutation = useMutation({
     mutationFn: (reviewData) => reviewAPI.createReview(reviewData),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reviews', id]);
-      queryClient.invalidateQueries(['average-rating', id]);
-      setNewReview({ rating: 0, comment: '', menuId: parseInt(id) });
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["average-rating", id]);
+      setNewReview({ rating: 0, comment: "", menuId: parseInt(id) });
     },
   });
 
   const menuItem = menuData?.data?.data;
   const reviews = reviewsData?.data?.data || [];
   const averageRating = averageRatingData?.data?.data || 0;
-  const cartQuantity = cartData?.data?.data?.cartItems?.find(item => item.menu?.id === parseInt(id))?.quantity || 0;
-  
+  const cartQuantity =
+    cartData?.data?.data?.cartItems?.find(
+      (item) => item.menu?.id === parseInt(id)
+    )?.quantity || 0;
+
   // Filter delivered orders that contain this menu item
-  const deliveredOrdersWithItem = ordersData?.data?.data?.filter(order => 
-    order.orderStatus === 'DELIVERED' && 
-    order.orderItems?.some(item => item.menu?.id === parseInt(id))
-  ) || [];
+  const deliveredOrdersWithItem =
+    ordersData?.data?.data?.filter(
+      (order) =>
+        order.orderStatus === "DELIVERED" &&
+        order.orderItems?.some((item) => item.menu?.id === parseInt(id))
+    ) || [];
 
   const handleAddToCart = () => {
     if (isAuthenticated()) {
       addToCartMutation.mutate({
         menuId: parseInt(id),
-        quantity: quantity
+        quantity: quantity,
       });
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
@@ -141,7 +156,7 @@ const MenuItemDetail = () => {
     if (isAuthenticated()) {
       incrementMutation.mutate(parseInt(id));
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
@@ -149,40 +164,40 @@ const MenuItemDetail = () => {
     if (isAuthenticated()) {
       decrementMutation.mutate(parseInt(id));
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
     if (newReview.rating === 0) {
-      alert('Please select a rating');
+      alert("Please select a rating");
       return;
     }
     if (!selectedOrderId) {
-      alert('Please select an order to review');
+      alert("Please select an order to review");
       return;
     }
     createReviewMutation.mutate({
       ...newReview,
-      orderId: parseInt(selectedOrderId)
+      orderId: parseInt(selectedOrderId),
     });
   };
 
   const handleRatingClick = (rating) => {
     setNewReview({
       ...newReview,
-      rating: rating
+      rating: rating,
     });
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -198,8 +213,10 @@ const MenuItemDetail = () => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Menu Item Not Found</h1>
-          <Button onClick={() => navigate('/menu')}>
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            Menu Item Not Found
+          </h1>
+          <Button onClick={() => navigate("/menu")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Menu
           </Button>
@@ -212,11 +229,13 @@ const MenuItemDetail = () => {
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="flex items-center space-x-4 mb-8">
-        <Button variant="outline" onClick={() => navigate('/menu')}>
+        <Button variant="outline" onClick={() => navigate("/menu")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Menu
         </Button>
-        <h1 className="text-3xl font-bold text-gray-900">Menu Item Details</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Menu Item Details
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -225,7 +244,7 @@ const MenuItemDetail = () => {
           <Card>
             <div className="aspect-square overflow-hidden rounded-t-lg">
               <img
-                src={menuItem.imageUrl || '/placeholder-food.jpg'}
+                src={menuItem.imageUrl || "/placeholder-food.jpg"}
                 alt={menuItem.name}
                 className="w-full h-full object-cover"
               />
@@ -233,17 +252,25 @@ const MenuItemDetail = () => {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{menuItem.name}</h2>
-                  <p className="text-gray-600 mt-2">{menuItem.description}</p>
+                  <h2 className="text-2xl font-bold text-foreground">
+                    {menuItem.name}
+                  </h2>
+                  <p className="text-muted-foreground mt-2">
+                    {menuItem.description}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                    <span className="text-lg font-semibold">
-                      {averageRating > 0 ? averageRating.toFixed(1) : 'No rating'}
+                    <span className="text-lg font-semibold text-foreground">
+                      {averageRating > 0
+                        ? averageRating.toFixed(1)
+                        : "No rating"}
                     </span>
-                    <span className="text-gray-500">({reviews.length} reviews)</span>
+                    <span className="text-muted-foreground">
+                      ({reviews.length} reviews)
+                    </span>
                   </div>
                   <div className="text-3xl font-bold text-primary">
                     ${menuItem.price?.toFixed(2)}
@@ -260,7 +287,9 @@ const MenuItemDetail = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            onClick={() =>
+                              setQuantity(Math.max(1, quantity - 1))
+                            }
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -286,9 +315,17 @@ const MenuItemDetail = () => {
                             disabled={decrementMutation.isPending}
                             className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Minus className={`h-4 w-4 transition-transform duration-200 ${decrementMutation.isPending ? 'animate-pulse' : ''}`} />
+                            <Minus
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                decrementMutation.isPending
+                                  ? "animate-pulse"
+                                  : ""
+                              }`}
+                            />
                           </Button>
-                          <span className="w-12 text-center font-medium">{cartQuantity}</span>
+                          <span className="w-12 text-center font-medium">
+                            {cartQuantity}
+                          </span>
                           <Button
                             size="sm"
                             variant="outline"
@@ -296,10 +333,18 @@ const MenuItemDetail = () => {
                             disabled={incrementMutation.isPending}
                             className="transition-all duration-200 hover:scale-110 active:scale-95"
                           >
-                            <Plus className={`h-4 w-4 transition-transform duration-200 ${incrementMutation.isPending ? 'animate-pulse' : ''}`} />
+                            <Plus
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                incrementMutation.isPending
+                                  ? "animate-pulse"
+                                  : ""
+                              }`}
+                            />
                           </Button>
                         </div>
-                        <span className="text-sm text-gray-600">in cart</span>
+                        <span className="text-sm text-muted-foreground">
+                          in cart
+                        </span>
                       </div>
                     ) : (
                       <Button
@@ -307,16 +352,19 @@ const MenuItemDetail = () => {
                         disabled={addToCartMutation.isPending}
                         className="w-full transition-all duration-200 hover:scale-105 active:scale-95"
                       >
-                        <ShoppingCart className={`h-4 w-4 mr-2 transition-transform duration-200 ${addToCartMutation.isPending ? 'animate-spin' : ''}`} />
-                        {addToCartMutation.isPending ? 'Adding...' : 'Add to Cart'}
+                        <ShoppingCart
+                          className={`h-4 w-4 mr-2 transition-transform duration-200 ${
+                            addToCartMutation.isPending ? "animate-spin" : ""
+                          }`}
+                        />
+                        {addToCartMutation.isPending
+                          ? "Adding..."
+                          : "Add to Cart"}
                       </Button>
                     )}
                   </div>
                 ) : (
-                  <Button
-                    onClick={() => navigate('/login')}
-                    className="w-full"
-                  >
+                  <Button onClick={() => navigate("/login")} className="w-full">
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Login to Add to Cart
                   </Button>
@@ -337,14 +385,17 @@ const MenuItemDetail = () => {
               <CardContent>
                 {deliveredOrdersWithItem.length === 0 ? (
                   <div className="text-center py-6">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">No delivered orders found</p>
-                    <p className="text-sm text-gray-500">
-                      You can only review items from orders that have been delivered.
+                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-2">
+                      No delivered orders found
                     </p>
-                    <Button 
-                      onClick={() => navigate('/orders')} 
-                      variant="outline" 
+                    <p className="text-sm text-muted-foreground">
+                      You can only review items from orders that have been
+                      delivered.
+                    </p>
+                    <Button
+                      onClick={() => navigate("/orders")}
+                      variant="outline"
                       className="mt-4"
                     >
                       View My Orders
@@ -353,18 +404,21 @@ const MenuItemDetail = () => {
                 ) : (
                   <form onSubmit={handleReviewSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="orderSelect">Select Order to Review *</Label>
+                      <Label htmlFor="orderSelect">
+                        Select Order to Review *
+                      </Label>
                       <select
                         id="orderSelect"
                         value={selectedOrderId}
                         onChange={(e) => setSelectedOrderId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground"
                         required
                       >
                         <option value="">Choose an order...</option>
                         {deliveredOrdersWithItem.map((order) => (
                           <option key={order.id} value={order.id}>
-                            Order #{order.id} - {new Date(order.orderDate).toLocaleDateString()}
+                            Order #{order.id} -{" "}
+                            {new Date(order.orderDate).toLocaleDateString()}
                           </option>
                         ))}
                       </select>
@@ -383,10 +437,10 @@ const MenuItemDetail = () => {
                             className="focus:outline-none"
                           >
                             <Star
-                              className={`h-8 w-8 ${
+                              className={`h-8 w-8 transition-colors ${
                                 star <= (hoveredRating || newReview.rating)
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-muted-foreground hover:text-yellow-300"
                               }`}
                             />
                           </button>
@@ -399,23 +453,34 @@ const MenuItemDetail = () => {
                       <textarea
                         id="comment"
                         value={newReview.comment}
-                        onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                        onChange={(e) =>
+                          setNewReview({
+                            ...newReview,
+                            comment: e.target.value,
+                          })
+                        }
                         placeholder="Share your experience with this dish..."
                         rows={3}
                         maxLength={500}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none bg-background text-foreground"
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {newReview.comment.length}/500 characters
                       </p>
                     </div>
 
                     <Button
                       type="submit"
-                      disabled={createReviewMutation.isPending || newReview.rating === 0 || !selectedOrderId}
+                      disabled={
+                        createReviewMutation.isPending ||
+                        newReview.rating === 0 ||
+                        !selectedOrderId
+                      }
                       className="w-full"
                     >
-                      {createReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
+                      {createReviewMutation.isPending
+                        ? "Submitting..."
+                        : "Submit Review"}
                     </Button>
                   </form>
                 )}
@@ -439,16 +504,21 @@ const MenuItemDetail = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : reviews.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review!</p>
+                <p className="text-muted-foreground text-center py-8">
+                  No reviews yet. Be the first to review!
+                </p>
               ) : (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
+                    <div
+                      key={review.id}
+                      className="border-b border-border pb-4 last:border-b-0"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium text-sm">
-                            {review.userName?.firstName || 'Anonymous'}
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-sm text-foreground">
+                            {review.userName?.firstName || "Anonymous"}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
@@ -457,17 +527,19 @@ const MenuItemDetail = () => {
                               key={i}
                               className={`h-4 w-4 ${
                                 i < review.rating
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           ))}
                         </div>
                       </div>
                       {review.comment && (
-                        <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
+                        <p className="text-foreground text-sm mb-2">
+                          {review.comment}
+                        </p>
                       )}
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span>{formatDate(review.createdAt)}</span>
                       </div>
