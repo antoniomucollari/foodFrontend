@@ -103,8 +103,26 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 w-full">
+       {/* Hero Section - Full width and height, no gap from nav */}
+       <section className="relative overflow-hidden h-screen -mt-10" style={{
+         width: '100vw',
+         marginLeft: 'calc(-50vw + 50%)',
+         marginRight: 'calc(-50vw + 50%)'
+       }}>
+        {/* Blurred background image */}
+        <div
+          className="absolute inset-0 blur-sm scale-105"
+          style={{
+            backgroundImage: 'url("https://imageproxy.wolt.com/assets/6858ffec0eaf2b3c054f2213")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        ></div>
+
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50"></div>
+
         {/* Animated Background Elements */}
         <div className="absolute inset-0 w-full">
           <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -112,8 +130,8 @@ const Home = () => {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
 
-        <div className="relative w-full px-6 py-20">
-          <div className="max-w-6xl mx-auto text-center">
+        <div className="relative px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
+          <div className="max-w-7xl mx-auto text-center">
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium mb-8">
               <Sparkles className="w-4 h-4 mr-2" />

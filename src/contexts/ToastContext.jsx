@@ -30,14 +30,14 @@ const Toast = ({ toast, onRemove }) => {
   const getBackgroundColor = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800';
+        return 'bg-green-50 border-green-200 dark:bg-green-900/70 dark:border-green-800';
       case 'error':
-        return 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800';
+        return 'bg-red-50 border-red-200 dark:bg-red-900/70 dark:border-red-800';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800';
+        return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/70 dark:border-yellow-800';
       case 'info':
       default:
-        return 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800';
+        return 'bg-blue-50 border-blue-200 dark:bg-blue-900/70 dark:border-blue-800';
     }
   };
 
@@ -251,7 +251,7 @@ export const ToastProvider = ({ children }) => {
       {children}
       
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
+      <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm w-full">
         {toasts.map(toast => (
           <Toast key={toast.id} toast={toast} onRemove={removeToast} />
         ))}

@@ -201,9 +201,9 @@ const LiveOrders = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-background">
       {/* Real-time Header */}
-      <div className="bg-white dark:bg-slate-800 shadow-lg border-b border-slate-200 dark:border-slate-700">
+      <div className="bg-card shadow-lg border-b border-border">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -218,24 +218,20 @@ const LiveOrders = () => {
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                   )}
                 </div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-foreground">
                   Live Orders
                 </h1>
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                    LIVE
-                  </span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="text-right relative">
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="text-2xl font-bold text-foreground">
                   {orders.length}
                 </div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   Active Orders
                 </div>
                 {newOrderCount > 0 && (
@@ -266,8 +262,8 @@ const LiveOrders = () => {
         {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-500" />
-              <p className="text-slate-600 dark:text-slate-400">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">
                 Loading live orders...
               </p>
             </div>
@@ -277,19 +273,19 @@ const LiveOrders = () => {
         {/* Error State */}
         {error && (
           <div className="text-center py-16">
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                <RefreshCw className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
+              <div className="w-12 h-12 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="h-6 w-6 text-destructive" />
               </div>
-              <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+              <h3 className="text-lg font-semibold text-destructive mb-2">
                 Connection Error
               </h3>
-              <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+              <p className="text-destructive/80 text-sm mb-4">
                 {error}
               </p>
               <Button
                 onClick={fetchOrders}
-                className="bg-red-600 hover:bg-red-700"
+                variant="destructive"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry Connection
@@ -301,14 +297,14 @@ const LiveOrders = () => {
         {/* No Orders State */}
         {!loading && !error && orders.length === 0 && (
           <div className="text-center py-16">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <RefreshCw className="h-8 w-8 text-slate-400" />
+            <div className="bg-card rounded-lg shadow-lg p-8 max-w-md mx-auto border border-border">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 All Caught Up!
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 No orders requiring attention at the moment
               </p>
             </div>
@@ -317,10 +313,10 @@ const LiveOrders = () => {
 
         {/* Orders Table */}
         {!loading && !error && orders.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="bg-card rounded-lg shadow-lg overflow-hidden border border-border">
+            <div className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                   Active Orders
                 </h2>
                 <div className="flex items-center space-x-2">

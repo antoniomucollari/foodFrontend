@@ -14,6 +14,8 @@ import { Badge } from "../components/ui/badge";
 import { Search, Star, Plus, Minus, ShoppingCart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { useCartToast } from "../contexts/CartToastContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { cartAPI } from "../services/api";
 
 const Menu = () => {
@@ -24,6 +26,8 @@ const Menu = () => {
   const searchInputRef = useRef(null);
   const { isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
+  const { showCartToast } = useCartToast();
+  const queryClient = useQueryClient();
 
   // Debounce search term to prevent excessive API calls
   React.useEffect(() => {
@@ -63,7 +67,7 @@ const Menu = () => {
   });
 
   // Fetch cart
-  const { data: cartData, refetch: refetchCart } = useQuery({
+  const { data: cartData } = useQuery({
     queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
     enabled: isAuthenticated(),
@@ -84,8 +88,8 @@ const Menu = () => {
         menuId,
         quantity: 1,
       });
-      refetchCart();
-      showSuccess("Item added to cart successfully!");
+      queryClient.invalidateQueries(["cart"]);
+      showCartToast("Item added to cart!");
     } catch (error) {
       // Error is handled by global error handler
       console.error("Error adding to cart:", error);
@@ -96,7 +100,7 @@ const Menu = () => {
     event.stopPropagation(); // Prevent card click from firing
     try {
       await cartAPI.incrementItem(menuId);
-      refetchCart();
+      queryClient.invalidateQueries(["cart"]);
     } catch (error) {
       console.error("Error incrementing item:", error);
     }
@@ -106,7 +110,7 @@ const Menu = () => {
     event.stopPropagation(); // Prevent card click from firing
     try {
       await cartAPI.decrementItem(menuId);
-      refetchCart();
+      queryClient.invalidateQueries(["cart"]);
     } catch (error) {
       console.error("Error decrementing item:", error);
     }
@@ -147,160 +151,194 @@ const Menu = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-4">Our Menu</h1>
-        <p className="text-lg text-muted-foreground">
-          Discover delicious food from our carefully curated menu
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        {/*<div className="text-center mb-12">*/}
+        {/*  <h1 className="text-5xl font-bold text-foreground mb-4">*/}
+        {/*    Our Menu*/}
+        {/*  </h1>*/}
+        {/*  <p className="text-xl text-muted-foreground max-w-2xl mx-auto">*/}
+        {/*    Discover our carefully crafted dishes made with the finest ingredients*/}
+        {/*  </p>*/}
+        {/*</div>*/}
 
-      {/* Search and Filters */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              ref={searchInputRef}
-              placeholder="Search for dishes..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-10"
-              autoFocus
-            />
-            {searchTerm !== debouncedSearchTerm && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              </div>
-            )}
+        {/* Search and Filters */}
+        <div className="mb-12">
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search for your favorite dishes..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="pl-12 pr-4 py-6 text-lg border-2 border-border rounded-2xl focus:border-primary focus:ring-0 bg-card shadow-lg"
+                autoFocus
+              />
+              {searchTerm !== debouncedSearchTerm && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button
+              variant={selectedCategory === null ? "default" : "outline"}
+              onClick={() => setSelectedCategory(null)}
+              size="lg"
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                selectedCategory === null
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                  : "bg-card hover:bg-accent border-2 border-border"
+              }`}
+            >
+              All Items
+            </Button>
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                onClick={() => setSelectedCategory(category.id)}
+                size="lg"
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                  selectedCategory === category.id
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                    : "bg-card hover:bg-accent border-2 border-border"
+                }`}
+              >
+                {category.name}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === null ? "default" : "outline"}
-            onClick={() => setSelectedCategory(null)}
-            size="sm"
-          >
-            All
-          </Button>
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category.id)}
-              size="sm"
-            >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Menu Items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {menuItems.map((item) => {
-          const cartQuantity = getCartQuantity(item.id);
-          return (
-            <Card
-              key={item.id}
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => window.open(`/menu/${item.id}`, "_blank")}
-            >
-              <div className="aspect-w-16 aspect-h-9">
-                <img
-                  src={item.imageUrl || "/placeholder-food.jpg"}
-                  alt={item.name}
-                  className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{item.name}</CardTitle>
-                  <Badge variant="secondary">${item.price?.toFixed(2)}</Badge>
-                </div>
-                <CardDescription className="text-sm">
-                  {item.description}
-                </CardDescription>
-                <div className="mt-2">
-                  <span className="text-xs text-blue-600 font-medium">
-                    Click to view details & reviews →
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-600">
-                      {averageRatings?.[item.id]
-                        ? averageRatings[item.id].toFixed(1)
-                        : "No rating"}
-                    </span>
+        {/* Menu Items */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {menuItems.map((item) => {
+            const cartQuantity = getCartQuantity(item.id);
+            return (
+              <div
+                key={item.id}
+                className="group bg-card rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-2 border border-border"
+                onClick={() => window.open(`/menu/${item.id}`, "_blank")}>
+                {/* Image Container */}
+                <div className="relative h-48 bg-muted/30 flex items-center justify-center p-4">
+                  <div className="relative w-48 h-48 rounded-full bg-background flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-500 dark:shadow-lg dark:shadow-black/40 -mb-8">
+                    <img
+                        src={item.imageUrl || "/placeholder-food.jpg"}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                    />
                   </div>
 
-                  {isAuthenticated() ? (
-                    <div className="flex items-center space-x-2">
-                      {cartQuantity > 0 ? (
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => handleDecrement(item.id, e)}
-                            className="transition-all duration-200 hover:scale-110 active:scale-95"
-                          >
-                            <Minus className="h-4 w-4 transition-transform duration-200" />
-                          </Button>
-                          <span className="text-sm font-medium">
-                            {cartQuantity}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => handleIncrement(item.id, e)}
-                            className="transition-all duration-200 hover:scale-110 active:scale-95"
-                          >
-                            <Plus className="h-4 w-4 transition-transform duration-200" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={(e) => handleAddToCart(item.id, e)}
-                          className="transition-all duration-200 hover:scale-105 active:scale-95"
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2 transition-transform duration-200" />
-                          Add to Cart
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showError("Please login to add items to cart");
-                      }}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                  )}
+                  {/* Price Badge */}
+                  <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-lg shadow-lg">
+                    ${item.price?.toFixed(2)}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
 
-      {menuItems.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No menu items found</p>
+                {/* Content */}
+                <div className="p-6 pt-12">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
+                      {item.name}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {averageRatings?.[item.id]
+                          ? averageRatings[item.id].toFixed(1)
+                          : "New"}
+                      </span>
+                    </div>
+                    {/*<span className="text-xs text-primary font-medium">*/}
+                    {/*  View Details →*/}
+                    {/*</span>*/}
+                  </div>
+
+                  {/* Add to Cart */}
+                  <div className="flex items-center justify-center">
+                    {isAuthenticated() ? (
+                      <div className="w-full">
+                        {cartQuantity > 0 ? (
+                          <div className="flex items-center justify-center space-x-3 bg-muted rounded-2xl p-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => handleDecrement(item.id, e)}
+                              className="w-10 h-10 rounded-full border-2 border-border hover:border-primary hover:bg-accent transition-all duration-200"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="text-lg font-bold text-foreground min-w-[2rem] text-center">
+                              {cartQuantity}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => handleIncrement(item.id, e)}
+                              className="w-10 h-10 rounded-full border-2 border-border hover:border-primary hover:bg-accent transition-all duration-200"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={(e) => handleAddToCart(item.id, e)}
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                          >
+                            <ShoppingCart className="h-5 w-5 mr-2" />
+                            Add to Cart
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showError("Please login to add items to cart");
+                        }}
+                        className="w-full border-2 border-border text-foreground hover:bg-accent font-bold py-3 rounded-2xl transition-all duration-300"
+                      >
+                        <ShoppingCart className="h-5 w-5 mr-2" />
+                        Add to Cart
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {menuItems.length === 0 && (
+          <div className="text-center py-20">
+            <div className="bg-card rounded-3xl p-12 shadow-lg max-w-md mx-auto border border-border">
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                No items found
+              </h3>
+              <p className="text-muted-foreground">
+                Try adjusting your search or filter criteria
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

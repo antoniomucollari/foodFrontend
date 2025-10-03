@@ -6,6 +6,7 @@ const ProtectedRoute = ({
   children,
   requireAdmin = false,
   restrictAdmin = false,
+  requireAuth = false,
 }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
   const location = useLocation();
@@ -18,15 +19,18 @@ const ProtectedRoute = ({
     );
   }
 
-  if (!isAuthenticated()) {
+  // If route requires authentication and user is not authenticated, redirect to login
+  if (requireAuth && !isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 
-  // If user is admin and trying to access non-admin routes, redirect to admin dashboard
-  if (restrictAdmin && isAdmin() && !location.pathname.startsWith("/admin")) {
+  // If user is authenticated and admin, and trying to access non-admin routes, redirect to admin dashboard
+  // This applies to ALL routes except admin, login, and register
+  if (isAuthenticated() && isAdmin() && !location.pathname.startsWith("/admin") && !location.pathname.startsWith("/login") && !location.pathname.startsWith("/register")) {
     return <Navigate to="/admin" replace />;
   }
 
+  // If route requires admin and user is not admin, redirect to home
   if (requireAdmin && !isAdmin()) {
     return <Navigate to="/" replace />;
   }

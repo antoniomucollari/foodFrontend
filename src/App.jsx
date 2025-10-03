@@ -10,6 +10,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { CartToastProvider } from "./contexts/CartToastContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -39,8 +40,9 @@ function App() {
         <AuthProvider>
           <CartProvider>
             <ToastProvider>
-              <Router>
-                <div className="min-h-screen bg-background text-foreground">
+              <CartToastProvider>
+                <Router>
+                <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -76,7 +78,7 @@ function App() {
                       <Route
                         path="cart"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requireAuth>
                             <Cart />
                           </ProtectedRoute>
                         }
@@ -84,7 +86,7 @@ function App() {
                       <Route
                         path="orders"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requireAuth>
                             <Orders />
                           </ProtectedRoute>
                         }
@@ -92,7 +94,7 @@ function App() {
                       <Route
                         path="profile"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requireAuth>
                             <Profile />
                           </ProtectedRoute>
                         }
@@ -109,7 +111,8 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </div>
-              </Router>
+                </Router>
+              </CartToastProvider>
             </ToastProvider>
           </CartProvider>
         </AuthProvider>

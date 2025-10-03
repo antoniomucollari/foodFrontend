@@ -18,3 +18,5 @@ export const useCartAnimation = (cartItemCount) => {
 
   return isAnimating;
 };
+
+

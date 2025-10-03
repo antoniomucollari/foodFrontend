@@ -3,8 +3,10 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useCartAnimation } from "../hooks/useCartAnimation";
+import { useCartToast } from "../contexts/CartToastContext";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
+import CartToast from "./CartToast";
 import {
   ShoppingCart,
   User,
@@ -21,6 +23,7 @@ const Layout = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const { cartItemCount } = useCart();
   const isCartAnimating = useCartAnimation(cartItemCount);
+  const { cartToast, hideCartToast } = useCartToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -46,7 +49,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm shadow-sm border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -99,21 +102,28 @@ const Layout = () => {
                   </Link>
                   {/* Cart Icon with Count - Only show for authenticated users */}
                   {isAuthenticated() && (
-                    <Link
-                      to="/cart"
-                      className="relative flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent hover:scale-105"
-                    >
-                      <ShoppingCart
-                        className={`h-4 w-4 transition-transform duration-200 ${
-                          isCartAnimating ? "animate-bounce" : ""
-                        }`}
+                    <div className="relative">
+                      <Link
+                        to="/cart"
+                        className="relative flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-foreground hover:text-primary hover:bg-accent hover:scale-105"
+                      >
+                        <ShoppingCart
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            isCartAnimating ? "animate-bounce" : ""
+                          }`}
+                        />
+                        {cartItemCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                            {cartItemCount}
+                          </span>
+                        )}
+                      </Link>
+                      <CartToast
+                        isVisible={cartToast.isVisible}
+                        onClose={hideCartToast}
+                        message={cartToast.message}
                       />
-                      {cartItemCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                          {cartItemCount}
-                        </span>
-                      )}
-                    </Link>
+                    </div>
                   )}
                   <Button variant="outline" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
@@ -245,7 +255,7 @@ const Layout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <Outlet />
       </main>
     </div>

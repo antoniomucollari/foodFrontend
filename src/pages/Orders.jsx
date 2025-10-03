@@ -171,7 +171,7 @@ const Orders = () => {
       <div className="space-y-6">
         {orders.map((order) => (
           <Card key={order.id} className="overflow-hidden">
-            <CardHeader className="bg-gray-50 dark:bg-slate-800">
+            <CardHeader className="bg-gray-50 dark:bg-[#2d2d2d]">
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-lg">Order #{order.id}</CardTitle>
