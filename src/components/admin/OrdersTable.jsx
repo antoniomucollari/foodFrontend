@@ -3,11 +3,11 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Eye } from "lucide-react";
 
-const OrdersTable = ({ 
-  orders, 
-  onUpdateOrderStatus, 
-  onViewOrderDetails, 
-  showStatusControls = true 
+const OrdersTable = ({
+  orders,
+  onUpdateOrderStatus,
+  onViewOrderDetails,
+  showStatusControls = true,
 }) => {
   const getOrderStatusColor = (status) => {
     switch (status) {
@@ -96,7 +96,7 @@ const OrdersTable = ({
               </td>
               <td className="py-3 px-4">
                 <span className="text-sm text-muted-foreground">
-                  {order.user?.name || order.user?.email || 'N/A'}
+                  {order.user?.name || order.user?.email || "N/A"}
                 </span>
               </td>
               <td className="py-3 px-4">
@@ -120,7 +120,7 @@ const OrdersTable = ({
                         "orderStatus"
                       )
                     }
-                    className="text-xs px-2 py-1 border border-border rounded bg-background text-foreground min-w-[120px]"
+                    className="text-xs px-2 py-1 border border-border rounded-lg bg-background text-foreground min-w-[120px] shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   >
                     <option value="INITIALIZED">Initialized</option>
                     <option value="CONFIRMED">Confirmed</option>
@@ -146,7 +146,7 @@ const OrdersTable = ({
                         "paymentStatus"
                       )
                     }
-                    className="text-xs px-2 py-1 border border-border rounded bg-background text-foreground min-w-[120px]"
+                    className="text-xs px-2 py-1 border border-border rounded-lg bg-background text-foreground min-w-[120px] shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   >
                     <option value="PENDING">Pending</option>
                     <option value="PROCESSING">Processing</option>

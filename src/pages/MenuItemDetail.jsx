@@ -70,6 +70,19 @@ const MenuItemDetail = () => {
     queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
     enabled: isAuthenticated(),
+    retry: (failureCount, error) => {
+      // Don't retry if it's a 404 (cart doesn't exist) or 401 (unauthorized)
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    onError: (error) => {
+      // Silently handle cart errors for new users
+      if (error?.response?.status === 404) {
+        console.log("Cart not found - user likely doesn't have a cart yet");
+      }
+    },
   });
 
   // Fetch user's delivered orders that contain this menu item
@@ -411,7 +424,7 @@ const MenuItemDetail = () => {
                         id="orderSelect"
                         value={selectedOrderId}
                         onChange={(e) => setSelectedOrderId(e.target.value)}
-                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:border-transparent cursor-pointer"
                         required
                       >
                         <option value="">Choose an order...</option>

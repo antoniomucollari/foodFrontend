@@ -166,15 +166,15 @@ const Home = () => {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-slate-900 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 rounded-xl"
-                onClick={handleGetStarted}
-              >
-                <Smartphone className="w-5 h-5 mr-2" />
-                Get Started
-              </Button>
+              {/*<Button*/}
+              {/*  variant="outline"*/}
+              {/*  size="lg"*/}
+              {/*  className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-slate-900 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 rounded-xl"*/}
+              {/*  onClick={handleGetStarted}*/}
+              {/*>*/}
+              {/*  <Smartphone className="w-5 h-5 mr-2" />*/}
+              {/*  Get Started*/}
+              {/*</Button>*/}
             </div>
 
             {/* Benefits List */}
@@ -211,11 +211,11 @@ const Home = () => {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-white dark:bg-slate-900">
+      <section className="py-20 bg-white dark:bg-[#1a1a1a]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-sm font-medium mb-6">
-              <Star className="w-4 h-4 mr-2" />
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-600 dark:bg-white dark:text-black font-medium mb-6">
+            <Star className="w-4 h-4 mr-2" />
               Why Choose Us?
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight w-full">

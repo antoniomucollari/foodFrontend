@@ -25,21 +25,21 @@ const GraphsSection = () => {
 
   // Helper functions
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatPercentage = (percentage) => {
-    const sign = percentage >= 0 ? '+' : '';
+    const sign = percentage >= 0 ? "+" : "";
     return `${sign}${percentage.toFixed(1)}%`;
   };
 
   const getPercentageColor = (percentage) => {
-    return percentage >= 0 ? 'text-green-500' : 'text-red-500';
+    return percentage >= 0 ? "text-green-500" : "text-red-500";
   };
 
   // Generate year options (current year and previous 5 years)
@@ -93,7 +93,7 @@ const GraphsSection = () => {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    className="px-3 py-2 border border-border rounded-lg bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   >
                     {yearOptions.map((year) => (
                       <option key={year} value={year}>
@@ -123,7 +123,7 @@ const GraphsSection = () => {
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    className="px-3 py-2 border border-border rounded-lg bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   >
                     {monthOptions.map((month) => (
                       <option key={month.value} value={month.value}>
@@ -134,7 +134,7 @@ const GraphsSection = () => {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    className="px-3 py-2 border border-border rounded-lg bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   >
                     {yearOptions.map((year) => (
                       <option key={year} value={year}>
@@ -155,38 +155,44 @@ const GraphsSection = () => {
       {/* Additional Analytics Cards */}
       <div className="flex justify-center">
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Previous Month
-                </p>
-                <p className="text-2xl font-bold">{formatCurrency(previousMonthRevenue)}</p>
-                <p className="text-sm text-muted-foreground">Last month's revenue</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Previous Month
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(previousMonthRevenue)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Last month's revenue
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Current Month
-                </p>
-                <p className="text-2xl font-bold">{formatCurrency(currentMonthDifference)}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Current Month
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(currentMonthDifference)}
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

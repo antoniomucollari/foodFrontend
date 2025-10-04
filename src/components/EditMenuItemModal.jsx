@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { menuAPI, categoryAPI } from '../services/api';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { menuAPI, categoryAPI } from "../services/api";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { X } from "lucide-react";
 
 const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
   const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    description: '',
-    price: '',
-    categoryId: '',
-    imageFile: null
+    id: "",
+    name: "",
+    description: "",
+    price: "",
+    categoryId: "",
+    imageFile: null,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch categories for dropdown
   const { data: categoriesData } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: () => categoryAPI.getAllCategories(),
   });
 
@@ -30,11 +36,11 @@ const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
     if (menuItem) {
       setFormData({
         id: menuItem.id,
-        name: menuItem.name || '',
-        description: menuItem.description || '',
-        price: menuItem.price?.toString() || '',
-        categoryId: menuItem.categoryId?.toString() || '',
-        imageFile: null // Don't pre-populate image file
+        name: menuItem.name || "",
+        description: menuItem.description || "",
+        price: menuItem.price?.toString() || "",
+        categoryId: menuItem.categoryId?.toString() || "",
+        imageFile: null, // Don't pre-populate image file
       });
     }
   }, [menuItem]);
@@ -42,51 +48,58 @@ const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
   const updateMenuItemMutation = useMutation({
     mutationFn: (menuData) => {
       const formDataToSend = new FormData();
-      formDataToSend.append('id', menuData.id);
-      formDataToSend.append('name', menuData.name);
-      formDataToSend.append('description', menuData.description);
-      formDataToSend.append('price', menuData.price);
-      formDataToSend.append('categoryId', menuData.categoryId);
+      formDataToSend.append("id", menuData.id);
+      formDataToSend.append("name", menuData.name);
+      formDataToSend.append("description", menuData.description);
+      formDataToSend.append("price", menuData.price);
+      formDataToSend.append("categoryId", menuData.categoryId);
       if (menuData.imageFile) {
-        formDataToSend.append('imageFile', menuData.imageFile);
+        formDataToSend.append("imageFile", menuData.imageFile);
       }
       return menuAPI.updateMenu(formDataToSend);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-menu']);
-      queryClient.invalidateQueries(['menu']);
+      queryClient.invalidateQueries(["admin-menu"]);
+      queryClient.invalidateQueries(["menu"]);
       onClose();
-      setFormData({ id: '', name: '', description: '', price: '', categoryId: '', imageFile: null });
-      setError('');
+      setFormData({
+        id: "",
+        name: "",
+        description: "",
+        price: "",
+        categoryId: "",
+        imageFile: null,
+      });
+      setError("");
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to update menu item');
+      setError(err.response?.data?.message || "Failed to update menu item");
     },
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.price || !formData.categoryId) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
     updateMenuItemMutation.mutate(formData);
     setIsLoading(false);
   };
 
   const handleChange = (e) => {
-    if (e.target.name === 'imageFile') {
+    if (e.target.name === "imageFile") {
       setFormData({
         ...formData,
-        imageFile: e.target.files[0]
+        imageFile: e.target.files[0],
       });
     } else {
       setFormData({
         ...formData,
-        [e.target.name]: e.target.value
+        [e.target.name]: e.target.value,
       });
     }
   };
@@ -162,7 +175,7 @@ const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
                 name="categoryId"
                 value={formData.categoryId}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                 required
               >
                 <option value="">Select a category</option>
@@ -186,7 +199,12 @@ const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
               />
               {menuItem.imageUrl && (
                 <div className="text-sm text-gray-600">
-                  Current image: <img src={menuItem.imageUrl} alt="Current" className="w-16 h-16 object-cover rounded mt-1" />
+                  Current image:{" "}
+                  <img
+                    src={menuItem.imageUrl}
+                    alt="Current"
+                    className="w-16 h-16 object-cover rounded mt-1"
+                  />
                 </div>
               )}
             </div>
@@ -205,7 +223,9 @@ const EditMenuItemModal = ({ isOpen, onClose, menuItem }) => {
                 disabled={isLoading || updateMenuItemMutation.isPending}
                 className="flex-1"
               >
-                {isLoading || updateMenuItemMutation.isPending ? 'Updating...' : 'Update Item'}
+                {isLoading || updateMenuItemMutation.isPending
+                  ? "Updating..."
+                  : "Update Item"}
               </Button>
             </div>
           </form>

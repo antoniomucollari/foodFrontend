@@ -29,6 +29,8 @@ import LiveOrders from "./components/admin/LiveOrders";
 import AllOrders from "./components/admin/AllOrders";
 import CategoriesManagement from "./components/admin/CategoriesManagement";
 import MenuItemsManagement from "./components/admin/MenuItemsManagement";
+import CustomersManagement from "./components/admin/CustomersManagement";
+import DeliveryManagement from "./components/admin/DeliveryManagement";
 import GraphsSection from "./components/admin/GraphsSection";
 
 const queryClient = new QueryClient();
@@ -42,75 +44,90 @@ function App() {
             <ToastProvider>
               <CartToastProvider>
                 <Router>
-                <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route
-                      path="admin"
-                      element={
-                        <ProtectedRoute requireAdmin>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      }
-                    >
+                  <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
                       <Route
-                        index
-                        element={<Navigate to="dashboard" replace />}
-                      />
-                      <Route path="dashboard" element={<DashboardHome />} />
-                      <Route path="live-orders" element={<LiveOrders />} />
-                      <Route path="all-orders" element={<AllOrders />} />
-                      <Route
-                        path="categories"
-                        element={<CategoriesManagement />}
-                      />
-                      <Route
-                        path="menuItems"
-                        element={<MenuItemsManagement />}
-                      />
-                      <Route path="graphs" element={<GraphsSection />} />
-                    </Route>
-                    <Route path="/" element={<Layout />}>
-                      <Route index element={<Home />} />
-                      <Route path="menu" element={<Menu />} />
-                      <Route path="menu/:id" element={<MenuItemDetail />} />
-                      <Route
-                        path="cart"
-                        element={
-                          <ProtectedRoute requireAuth>
-                            <Cart />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="orders"
-                        element={
-                          <ProtectedRoute requireAuth>
-                            <Orders />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="profile"
-                        element={
-                          <ProtectedRoute requireAuth>
-                            <Profile />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="new-orders"
+                        path="admin"
                         element={
                           <ProtectedRoute requireAdmin>
-                            <NewOrders />
+                            <AdminDashboard />
                           </ProtectedRoute>
                         }
-                      />
-                    </Route>
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </div>
+                      >
+                        <Route
+                          index
+                          element={<Navigate to="dashboard" replace />}
+                        />
+                        <Route path="dashboard" element={<DashboardHome />} />
+                        <Route path="live-orders" element={<LiveOrders />} />
+                        <Route path="all-orders" element={<AllOrders />} />
+                        <Route
+                          path="categories"
+                          element={<CategoriesManagement />}
+                        />
+                        <Route
+                          path="menuItems"
+                          element={<MenuItemsManagement />}
+                        />
+                        <Route
+                          path="customers"
+                          element={<CustomersManagement />}
+                        />
+                        <Route
+                          path="delivery"
+                          element={<DeliveryManagement />}
+                        />
+                        <Route path="graphs" element={<GraphsSection />} />
+                      </Route>
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <Layout />
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route index element={<Home />} />
+                        <Route path="menu" element={<Menu />} />
+                        <Route path="menu/:id" element={<MenuItemDetail />} />
+                        <Route
+                          path="cart"
+                          element={
+                            <ProtectedRoute requireAuth>
+                              <Cart />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="orders"
+                          element={
+                            <ProtectedRoute requireAuth>
+                              <Orders />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="profile"
+                          element={
+                            <ProtectedRoute requireAuth>
+                              <Profile />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="new-orders"
+                          element={
+                            <ProtectedRoute requireAdmin>
+                              <NewOrders />
+                            </ProtectedRoute>
+                          }
+                        />
+                      </Route>
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </div>
                 </Router>
               </CartToastProvider>
             </ToastProvider>

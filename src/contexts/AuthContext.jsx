@@ -156,7 +156,6 @@ export const AuthProvider = ({ children }) => {
   const deactivateAccount = async () => {
     try {
       const response = await userAPI.deactivateOwnAccount();
-      // Logout user after deactivation
       logout();
       return response.data;
     } catch (error) {

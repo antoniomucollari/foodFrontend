@@ -73,21 +73,21 @@ const DashboardHome = () => {
 
   // Helper functions
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatPercentage = (percentage) => {
-    const sign = percentage >= 0 ? '+' : '';
+    const sign = percentage >= 0 ? "+" : "";
     return `${sign}${percentage.toFixed(1)}%`;
   };
 
   const getPercentageColor = (percentage) => {
-    return percentage >= 0 ? 'text-green-500' : 'text-red-500';
+    return percentage >= 0 ? "text-green-500" : "text-red-500";
   };
 
   const getOrderStatusColor = (status) => {
@@ -163,14 +163,20 @@ const DashboardHome = () => {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Revenue
                 </p>
-                <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(totalRevenue)}
+                </p>
                 <div className="flex items-center mt-2">
                   {percentageChange >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${getPercentageColor(percentageChange)}`}>
+                  <span
+                    className={`text-sm ${getPercentageColor(
+                      percentageChange
+                    )}`}
+                  >
                     {formatPercentage(percentageChange)} from last month
                   </span>
                 </div>
@@ -364,7 +370,7 @@ const DashboardHome = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>Most Ordered</CardTitle>
                 <div className="flex items-center space-x-2">
-                  <select className="px-3 py-1 border border-border rounded-md bg-background text-foreground text-sm">
+                  <select className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer">
                     <option>Today</option>
                     <option>This Month</option>
                     <option>This Year</option>
@@ -412,7 +418,7 @@ const DashboardHome = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Order Status</CardTitle>
-                <select className="px-3 py-1 border border-border rounded-md bg-background text-foreground text-sm">
+                <select className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer">
                   <option>Today</option>
                 </select>
               </div>

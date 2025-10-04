@@ -18,7 +18,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log("Making API request:", config.method?.toUpperCase(), config.url, config.params);
+    console.log(
+      "Making API request:",
+      config.method?.toUpperCase(),
+      config.url,
+      config.params
+    );
     return config;
   },
   (error) => {
@@ -29,12 +34,22 @@ api.interceptors.request.use(
 // Response interceptor to handle token expiration and global error handling
 api.interceptors.response.use(
   (response) => {
-    console.log("API response:", response.config.url, response.status, response.data);
+    console.log(
+      "API response:",
+      response.config.url,
+      response.status,
+      response.data
+    );
     return response;
   },
   (error) => {
-    console.error("API error:", error.config?.url, error.response?.status, error.response?.data);
-    
+    console.error(
+      "API error:",
+      error.config?.url,
+      error.response?.status,
+      error.response?.data
+    );
+
     // Handle 401 errors (token expiration)
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
@@ -42,10 +57,10 @@ api.interceptors.response.use(
       window.location.href = "/login";
       return Promise.reject(error);
     }
-    
+
     // Handle all other errors with global error handler
     handleApiError(error);
-    
+
     return Promise.reject(error);
   }
 );
@@ -58,7 +73,16 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
-  getAllUsers: () => api.get("/users/all"),
+  getAllUsers: (role = "CUSTOMER", searchString = "") => {
+    const params = new URLSearchParams({ role });
+    if (searchString) {
+      params.append("searchString", searchString);
+    }
+    return api.get(`/users/all?${params.toString()}`);
+  },
+  changeRole: (id, changeTo) =>
+    api.get(`/users/change-role?id=${id}&changeTo=${changeTo}`),
+  deactivateAccount: (id) => api.delete(`/users/deactivate?id=${id}`),
   updateOwnAccount: (userData) => {
     const formData = new FormData();
     Object.keys(userData).forEach((key) => {
@@ -70,7 +94,7 @@ export const userAPI = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  deactivateOwnAccount: () => api.delete("/users/deactivate"),
+  deactivateOwnAccount: () => api.delete("/users/deactivate-any"),
   getOwnAccountDetails: () => api.get("/users/account"),
 };
 
@@ -117,7 +141,37 @@ export const orderAPI = {
   getOrderById: (id) => api.get(`/orders/get-by-id/${id}`),
   getOrderItemById: (orderItemId) =>
     api.get(`/orders/order-item/${orderItemId}`),
-  getAllOrders: (params = {}) => api.get("/orders/all", { params }),
+  getAllOrders: (params = {}) => {
+    // Map searchId to orderId parameter for the API and clean up empty values
+    const apiParams = {};
+
+    // Only include non-empty values
+    if (params.orderStatus && params.orderStatus !== "") {
+      apiParams.orderStatus = params.orderStatus;
+    }
+    if (params.paymentStatus && params.paymentStatus !== "") {
+      apiParams.paymentStatus = params.paymentStatus;
+    }
+    if (params.searchId && params.searchId !== "") {
+      apiParams.orderId = params.searchId;
+    }
+    if (params.customerId && params.customerId !== "") {
+      apiParams.customerId = parseInt(params.customerId);
+    }
+    if (params.page !== undefined && params.page !== null) {
+      apiParams.page = params.page;
+    }
+    if (params.size !== undefined && params.size !== null) {
+      apiParams.size = params.size;
+    }
+
+    console.log("API call - getAllOrders with params:", apiParams);
+    console.log(
+      "Full URL will be:",
+      `/orders/all?${new URLSearchParams(apiParams).toString()}`
+    );
+    return api.get("/orders/all", { params: apiParams });
+  },
   getNewOrders: (params = {}) =>
     api.get("/orders/all", {
       params: {
@@ -127,7 +181,8 @@ export const orderAPI = {
         excludeCompletedPayment: true,
       },
     }),
-  getIncompleteOrders: (params = {}) => api.get("/orders/incomplete-orders", { params }),
+  getIncompleteOrders: (params = {}) =>
+    api.get("/orders/incomplete-orders", { params }),
   updateOrderStatus: (orderData) => api.put("/orders/update-status", orderData),
   countUniqueCustomers: () => api.get("/orders/unique-customers"),
 

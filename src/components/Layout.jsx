@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useCartAnimation } from "../hooks/useCartAnimation";
 import { useCartToast } from "../contexts/CartToastContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import CartToast from "./CartToast";
@@ -24,6 +25,7 @@ const Layout = () => {
   const { cartItemCount } = useCart();
   const isCartAnimating = useCartAnimation(cartItemCount);
   const { cartToast, hideCartToast } = useCartToast();
+  const { isLight } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -32,14 +34,13 @@ const Layout = () => {
     { name: "Menu", href: "/menu", icon: ChefHat },
   ];
 
-  if (isAuthenticated()) {
+  // Only show Orders in light mode
+  if (isAuthenticated() && isLight) {
     navigation.push({ name: "Orders", href: "/orders", icon: User });
   }
 
-  // Admin users will access dashboard directly via URL
-  // if (isAdmin()) {
-  //   navigation.push({ name: 'Admin', href: '/admin', icon: Settings });
-  // }
+  // Admin users will be redirected to admin dashboard automatically
+  // No need to add admin link to customer navigation
 
   const handleLogout = () => {
     logout();
@@ -188,6 +189,7 @@ const Layout = () => {
                   <div className="px-3 py-2 text-sm text-muted-foreground">
                     Welcome, {user?.name || user?.email}
                   </div>
+                  {/* Admin users will be redirected to admin dashboard automatically */}
                   {/* Profile Link */}
                   <Link
                     to="/profile"

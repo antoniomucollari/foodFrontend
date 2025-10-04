@@ -10,6 +10,8 @@ import {
   List,
   ChefHat,
   BarChart3,
+  Users,
+  Truck,
   LogOut,
   Menu as MenuIcon,
   X,
@@ -21,12 +23,54 @@ const AdminDashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [
-    { id: "dashboard", name: "Dashboard", icon: Home, path: "/admin/dashboard" },
-    { id: "live-orders", name: "Live Orders", icon: RotateCcw, path: "/admin/live-orders" },
-    { id: "all-orders", name: "All Orders", icon: Package, path: "/admin/all-orders" },
-    { id: "categories", name: "Categories", icon: Package, path: "/admin/categories" },
-    { id: "menu-items", name: "Menu Items", icon: ChefHat, path: "/admin/menuItems" },
-    { id: "graphs", name: "More Graphs", icon: BarChart3, path: "/admin/graphs" },
+    {
+      id: "dashboard",
+      name: "Dashboard",
+      icon: Home,
+      path: "/admin/dashboard",
+    },
+    {
+      id: "live-orders",
+      name: "Live Orders",
+      icon: RotateCcw,
+      path: "/admin/live-orders",
+    },
+    {
+      id: "all-orders",
+      name: "All Orders",
+      icon: Package,
+      path: "/admin/all-orders",
+    },
+    {
+      id: "categories",
+      name: "Categories",
+      icon: Package,
+      path: "/admin/categories",
+    },
+    {
+      id: "menu-items",
+      name: "Menu Items",
+      icon: ChefHat,
+      path: "/admin/menuItems",
+    },
+    {
+      id: "customers",
+      name: "Customers",
+      icon: Users,
+      path: "/admin/customers",
+    },
+    {
+      id: "delivery",
+      name: "Delivery",
+      icon: Truck,
+      path: "/admin/delivery",
+    },
+    {
+      id: "graphs",
+      name: "More Graphs",
+      icon: BarChart3,
+      path: "/admin/graphs",
+    },
   ];
 
   const handleLogout = () => {

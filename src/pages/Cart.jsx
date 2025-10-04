@@ -39,6 +39,19 @@ const Cart = () => {
   } = useQuery({
     queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
+    retry: (failureCount, error) => {
+      // Don't retry if it's a 404 (cart doesn't exist) or 401 (unauthorized)
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    onError: (error) => {
+      // Handle cart errors gracefully
+      if (error?.response?.status === 404) {
+        console.log("Cart not found - user likely doesn't have a cart yet");
+      }
+    },
   });
 
   // Mutations
@@ -148,9 +161,41 @@ const Cart = () => {
   }
 
   if (error) {
+    // Check if it's a 404 error (user doesn't have a cart yet)
+    if (error?.response?.status === 404) {
+      return (
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" asChild className="flex items-center">
+              <Link to="/menu">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Menu
+              </Link>
+            </Button>
+            <h1 className="text-3xl font-bold">Your Cart</h1>
+          </div>
+
+          <div className="text-center py-12">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
+            <p className="text-muted-foreground mb-6">
+              Start shopping to add items to your cart
+            </p>
+            <Button asChild>
+              <Link to="/menu">Browse Menu</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // For other errors, show the error message
     return (
       <div className="text-center py-12">
         <p className="text-destructive text-lg">Error loading cart</p>
+        <p className="text-muted-foreground text-sm mt-2">
+          Please try refreshing the page
+        </p>
       </div>
     );
   }

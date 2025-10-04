@@ -93,7 +93,7 @@ const MenuItemsManagement = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                className="px-3 py-2 border border-border rounded-lg bg-background text-foreground shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -124,48 +124,50 @@ const MenuItemsManagement = () => {
           )}
 
           {!isLoading && menuItems.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {menuItems.map((item) => (
                 <Card
                   key={item.id}
                   className="hover:shadow-md transition-shadow"
                 >
-                  <div className="aspect-video overflow-hidden">
+                  <div className="aspect-square overflow-hidden">
                     <img
                       src={item.imageUrl || "/placeholder-food.jpg"}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-lg line-clamp-2">
+                      <h3 className="font-semibold text-sm line-clamp-2 flex-1">
                         {item.name}
                       </h3>
-                      <div className="flex space-x-1 ml-2">
+                      <div className="flex space-x-1 ml-1">
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-6 w-6 p-0"
                           onClick={() => handleEditMenuItem(item)}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-6 w-6 p-0"
                           onClick={() => handleDeleteMenuItem(item.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                       {item.description}
                     </p>
 
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-lg font-bold text-primary">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-primary">
                         ${item.price?.toFixed(2)}
                       </span>
                       <span className="text-xs text-muted-foreground">

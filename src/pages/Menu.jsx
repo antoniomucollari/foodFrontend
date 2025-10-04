@@ -71,6 +71,19 @@ const Menu = () => {
     queryKey: ["cart"],
     queryFn: () => cartAPI.getShoppingCart(),
     enabled: isAuthenticated(),
+    retry: (failureCount, error) => {
+      // Don't retry if it's a 404 (cart doesn't exist) or 401 (unauthorized)
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    onError: (error) => {
+      // Silently handle cart errors for new users
+      if (error?.response?.status === 404) {
+        console.log("Cart not found - user likely doesn't have a cart yet");
+      }
+    },
   });
 
   const categories = categoriesData?.data?.data || [];
@@ -201,7 +214,9 @@ const Menu = () => {
             {categories.map((category) => (
               <Button
                 key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
+                variant={
+                  selectedCategory === category.id ? "default" : "outline"
+                }
                 onClick={() => setSelectedCategory(category.id)}
                 size="lg"
                 className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
@@ -224,14 +239,15 @@ const Menu = () => {
               <div
                 key={item.id}
                 className="group bg-card rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-2 border border-border"
-                onClick={() => window.open(`/menu/${item.id}`, "_blank")}>
+                onClick={() => window.open(`/menu/${item.id}`, "_blank")}
+              >
                 {/* Image Container */}
                 <div className="relative h-48 bg-muted/30 flex items-center justify-center p-4">
                   <div className="relative w-48 h-48 rounded-full bg-background flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-500 dark:shadow-lg dark:shadow-black/40 -mb-8">
                     <img
-                        src={item.imageUrl || "/placeholder-food.jpg"}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
+                      src={item.imageUrl || "/placeholder-food.jpg"}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
                     />
                   </div>
 
