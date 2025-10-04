@@ -203,6 +203,24 @@ export const orderAPI = {
     api.get("/orders/stats/most-popular-items", {
       params: { limit },
     }),
+
+  // Delivery-specific methods (these endpoints will need to be implemented in the backend)
+  getDeliveryStats: (deliveryId) =>
+    api.get(`/orders/delivery/stats/${deliveryId}`),
+  getDeliveryOrders: (deliveryId, params = {}) => {
+    const apiParams = {
+      deliveryId,
+      ...params,
+    };
+    return api.get("/orders/delivery/orders", { params: apiParams });
+  },
+  getDeliveryIncompleteOrders: (deliveryId, params = {}) => {
+    const apiParams = {
+      deliveryId,
+      ...params,
+    };
+    return api.get("/orders/delivery/incomplete-orders", { params: apiParams });
+  },
 };
 
 // Review API

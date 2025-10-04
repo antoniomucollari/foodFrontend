@@ -21,6 +21,7 @@ import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
+import DeliveryDashboard from "./pages/DeliveryDashboard";
 import NewOrders from "./pages/NewOrders";
 import ProtectedRoute from "./components/ProtectedRoute";
 // Import admin components
@@ -32,6 +33,10 @@ import MenuItemsManagement from "./components/admin/MenuItemsManagement";
 import CustomersManagement from "./components/admin/CustomersManagement";
 import DeliveryManagement from "./components/admin/DeliveryManagement";
 import GraphsSection from "./components/admin/GraphsSection";
+// Import delivery components
+import DeliveryDashboardHome from "./components/delivery/DeliveryDashboardHome";
+import DeliveryLiveOrders from "./components/delivery/DeliveryLiveOrders";
+import DeliveryAllOrders from "./components/delivery/DeliveryAllOrders";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +85,31 @@ function App() {
                           element={<DeliveryManagement />}
                         />
                         <Route path="graphs" element={<GraphsSection />} />
+                      </Route>
+                      <Route
+                        path="delivery-panel"
+                        element={
+                          <ProtectedRoute requireDelivery>
+                            <DeliveryDashboard />
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route
+                          index
+                          element={<Navigate to="dashboard" replace />}
+                        />
+                        <Route
+                          path="dashboard"
+                          element={<DeliveryDashboardHome />}
+                        />
+                        <Route
+                          path="live-orders"
+                          element={<DeliveryLiveOrders />}
+                        />
+                        <Route
+                          path="all-orders"
+                          element={<DeliveryAllOrders />}
+                        />
                       </Route>
                       <Route
                         path="/"
