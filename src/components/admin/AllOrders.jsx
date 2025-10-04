@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
-import { Search, Filter, RefreshCw, Eye, User, X } from "lucide-react";
+import { Search, Filter, RefreshCw, Eye, User, X, Truck } from "lucide-react";
 import OrderDetailModal from "./OrderDetailModal";
 import OrdersTable from "./OrdersTable";
 
@@ -17,6 +17,7 @@ const AllOrders = () => {
     paymentStatus: searchParams.get("paymentStatus") || "",
     searchId: searchParams.get("searchId") || "",
     customerId: searchParams.get("customerId") || "",
+    deliveryId: searchParams.get("deliveryId") || "",
     page: parseInt(searchParams.get("page")) || 0,
     size: parseInt(searchParams.get("size")) || 20,
   });
@@ -25,6 +26,9 @@ const AllOrders = () => {
   const [customerSearch, setCustomerSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [deliverySearch, setDeliverySearch] = useState("");
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [showDeliveryDropdown, setShowDeliveryDropdown] = useState(false);
 
   // Customer search query
   const { data: customersData, isLoading: isLoadingCustomers } = useQuery({
@@ -39,6 +43,22 @@ const AllOrders = () => {
       queryKey: ["all-customers"],
       queryFn: () => userAPI.getAllUsers("CUSTOMER", ""),
       enabled: Boolean(filters.customerId && !selectedCustomer),
+    }
+  );
+
+  // Delivery person search query
+  const { data: deliveryData, isLoading: isLoadingDelivery } = useQuery({
+    queryKey: ["delivery", deliverySearch],
+    queryFn: () => userAPI.getAllUsers("DELIVERY", deliverySearch),
+    enabled: deliverySearch.length > 2,
+  });
+
+  // Fetch all delivery persons for initial load when deliveryId is in URL
+  const { data: allDeliveryData, isLoading: isLoadingAllDelivery } = useQuery(
+    {
+      queryKey: ["all-delivery"],
+      queryFn: () => userAPI.getAllUsers("DELIVERY", ""),
+      enabled: Boolean(filters.deliveryId && !selectedDelivery),
     }
   );
 
@@ -59,6 +79,7 @@ const AllOrders = () => {
   const totalPages = ordersData?.data?.data?.totalPages || 0;
   const currentPage = ordersData?.data?.data?.number || 0;
   const customers = customersData?.data?.data || [];
+  const deliveryPersons = deliveryData?.data?.data || [];
 
   const getOrderStatusColor = (status) => {
     switch (status) {
@@ -166,6 +187,29 @@ const AllOrders = () => {
     handleFilterChange("customerId", "");
   };
 
+  const handleDeliverySelect = (delivery) => {
+    setSelectedDelivery(delivery);
+    setDeliverySearch(delivery.name);
+    setShowDeliveryDropdown(false);
+    handleFilterChange("deliveryId", delivery.id);
+  };
+
+  const handleDeliverySearchChange = (value) => {
+    setDeliverySearch(value);
+    setShowDeliveryDropdown(value.length > 2);
+    if (value === "") {
+      setSelectedDelivery(null);
+      handleFilterChange("deliveryId", "");
+    }
+  };
+
+  const clearDeliveryFilter = () => {
+    setSelectedDelivery(null);
+    setDeliverySearch("");
+    setShowDeliveryDropdown(false);
+    handleFilterChange("deliveryId", "");
+  };
+
   // Initialize customer search from URL parameters
   useEffect(() => {
     if (
@@ -186,7 +230,27 @@ const AllOrders = () => {
     }
   }, [filters.customerId, selectedCustomer, allCustomersData]);
 
-  // Close customer dropdown when clicking outside
+  // Initialize delivery search from URL parameters
+  useEffect(() => {
+    if (
+      filters.deliveryId &&
+      !selectedDelivery &&
+      allDeliveryData?.data?.data
+    ) {
+      const allDelivery = allDeliveryData.data.data;
+      const delivery = allDelivery.find(
+        (d) => d.id === parseInt(filters.deliveryId)
+      );
+      if (delivery) {
+        setSelectedDelivery(delivery);
+        setDeliverySearch(delivery.name);
+      } else {
+        setDeliverySearch(`Delivery ID: ${filters.deliveryId}`);
+      }
+    }
+  }, [filters.deliveryId, selectedDelivery, allDeliveryData]);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -195,13 +259,19 @@ const AllOrders = () => {
       ) {
         setShowCustomerDropdown(false);
       }
+      if (
+        showDeliveryDropdown &&
+        !event.target.closest(".delivery-search-container")
+      ) {
+        setShowDeliveryDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showCustomerDropdown]);
+  }, [showCustomerDropdown, showDeliveryDropdown]);
 
   const handleViewOrderDetails = (order) => {
     setSelectedOrder(order);
@@ -292,6 +362,46 @@ const AllOrders = () => {
                   className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground text-sm"
                 >
                   {customer.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Delivery Person Search */}
+        <div className="delivery-search-container relative flex-1 min-w-[200px] max-w-xs">
+          <Truck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={
+              isLoadingAllDelivery
+                ? "Loading delivery..."
+                : "Search by Delivery Person..."
+            }
+            value={deliverySearch}
+            onChange={(e) => handleDeliverySearchChange(e.target.value)}
+            onFocus={() => setShowDeliveryDropdown(deliverySearch.length > 2)}
+            className="pl-10 pr-8 h-9"
+            disabled={isLoadingAllDelivery}
+          />
+          {selectedDelivery && (
+            <button
+              onClick={clearDeliveryFilter}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Delivery Dropdown */}
+          {showDeliveryDropdown && deliveryPersons.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+              {deliveryPersons.map((delivery) => (
+                <button
+                  key={delivery.id}
+                  onClick={() => handleDeliverySelect(delivery)}
+                  className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground text-sm"
+                >
+                  {delivery.name}
                 </button>
               ))}
             </div>

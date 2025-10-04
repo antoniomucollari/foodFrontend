@@ -13,6 +13,7 @@ import {
   TrendingDown,
   RefreshCw,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import OrderDetailModal from "../admin/OrderDetailModal";
 
@@ -85,6 +86,12 @@ const DeliveryDashboardHome = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
+  };
+
+  const handleViewInAdmin = () => {
+    // Navigate to admin orders with this delivery person pre-selected
+    const adminUrl = `/admin-panel/all-orders?deliveryId=${user?.id}`;
+    window.open(adminUrl, '_blank');
   };
 
   return (
@@ -312,6 +319,10 @@ const DeliveryDashboardHome = () => {
                   <Package className="h-4 w-4 mr-2" />
                   My Orders
                 </a>
+              </Button>
+              <Button variant="outline" className="w-full" onClick={handleViewInAdmin}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View in Admin Panel
               </Button>
             </CardContent>
           </Card>

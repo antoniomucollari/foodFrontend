@@ -158,6 +158,9 @@ export const orderAPI = {
     if (params.customerId && params.customerId !== "") {
       apiParams.customerId = parseInt(params.customerId);
     }
+    if (params.deliveryId && params.deliveryId !== "") {
+      apiParams.deliveryId = parseInt(params.deliveryId);
+    }
     if (params.page !== undefined && params.page !== null) {
       apiParams.page = params.page;
     }

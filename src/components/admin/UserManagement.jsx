@@ -129,6 +129,10 @@ const UserManagement = ({ role, title, description, icon: Icon }) => {
     navigate(`/admin/all-orders?customerId=${customerId}&size=20`);
   };
 
+  const handleViewDeliveryOrders = (deliveryId) => {
+    navigate(`/admin/all-orders?deliveryId=${deliveryId}&size=20`);
+  };
+
   // Available roles (excluding ADMIN)
   const availableRoles = [
     {
@@ -343,6 +347,20 @@ const UserManagement = ({ role, title, description, icon: Icon }) => {
                                       onClick={() => handleViewCustomerOrders(user.id)}
                                       title={`View all orders for ${
                                           user.name || "this customer"
+                                      }`}
+                                  >
+                                    <Package className="h-4 w-4" />
+                                  </Button>
+                              )}
+
+                              {/* View Orders Button - Only for delivery personnel */}
+                              {role === "DELIVERY" && (
+                                  <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleViewDeliveryOrders(user.id)}
+                                      title={`View all orders for ${
+                                          user.name || "this delivery person"
                                       }`}
                                   >
                                     <Package className="h-4 w-4" />

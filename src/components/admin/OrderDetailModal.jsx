@@ -2,7 +2,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { User, Calendar, DollarSign, Package, MapPin } from "lucide-react";
+import { User, Calendar, DollarSign, Package, MapPin, Truck } from "lucide-react";
 
 const OrderDetailModal = ({ order, isOpen, onClose }) => {
   if (!order) return null;
@@ -130,6 +130,39 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                 <div>
                   <p className="text-sm text-muted-foreground">User ID</p>
                   <p className="font-medium">{order.user?.id || "N/A"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Delivery Person Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Truck className="h-4 w-4 mr-2" />
+                Delivery Person
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium">
+                    {order.deliveryPerson?.name ||
+                      (order.deliveryPerson?.firstName && order.deliveryPerson?.lastName
+                        ? `${order.deliveryPerson.firstName} ${order.deliveryPerson.lastName}`
+                        : order.deliveryPerson?.firstName ||
+                          order.deliveryPerson?.lastName ||
+                          "Not Assigned")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium">{order.deliveryPerson?.email || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Delivery Person ID</p>
+                  <p className="font-medium">{order.deliveryPerson?.id || "N/A"}</p>
                 </div>
               </div>
             </CardContent>
